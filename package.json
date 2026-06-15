@@ -1,0 +1,15 @@
+{
+  "name": "augur",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Augur — an NLE-style session planner for tabletop RPGs (Tauri desktop shell).",
+  "scripts": {
+    "build:frontend": "node build-frontend.mjs",
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

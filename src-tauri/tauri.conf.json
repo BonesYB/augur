@@ -1,0 +1,42 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Augur",
+  "version": "0.1.0",
+  "identifier": "com.yellowberri.augur",
+  "build": {
+    "frontendDist": "../dist",
+    "beforeDevCommand": "node build-frontend.mjs",
+    "beforeBuildCommand": "node build-frontend.mjs"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "Augur",
+        "width": 1280,
+        "height": 820,
+        "minWidth": 960,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["msi", "nsis"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico"
+    ],
+    "category": "Productivity",
+    "shortDescription": "An NLE-style session planner for tabletop RPGs.",
+    "longDescription": "Augur is a GM-only, non-linear-editor-style planning surface for tabletop RPG sessions. Arrange scenes, sequences, and clocks on a timeline, cut the session as it happens, and keep your vault of NPCs, locations, items, and stat blocks at your fingertips."
+  },
+  "plugins": {}
+}

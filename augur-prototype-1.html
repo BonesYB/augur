@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Augur</title>
+<link rel="icon" type="image/svg+xml" href="AugurIcon.svg" />
+<style>
+  :root{
+    --bg:#14161a; --panel:#1b1e24; --panel-2:#21252c; --line:#2c313a;
+    --ink:#e7ebf0; --ink-dim:#9aa3af; --ink-faint:#5f6873;
+    --accent:#5b9dff; --scene:#3d6fd6; --seq-tight:#7c5cff; --seq-dist:#1f9e8f;
+    --clock:#e0a13c; --ender:#d65c7a; --good:#3fbf7f; --warn:#e0a13c;
+    --radius:6px; --ruler-h:26px; --tl-h:360px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    overflow:hidden; user-select:none;
+  }
+  .app{display:grid; grid-template-columns:248px 1fr; grid-template-rows:1fr; height:100vh}
+
+  /* ---------- Bag ---------- */
+  .bag{background:var(--panel); border-right:1px solid var(--line); display:flex; flex-direction:column; min-height:0}
+  .bag-head{padding:12px 14px 8px; border-bottom:1px solid var(--line)}
+  .logo{height:22px; width:auto; display:block}
+  .bag-scroll{overflow-y:auto; padding:8px 8px 24px; flex:1}
+  .bag-group{margin-bottom:6px}
+  .bag-group h3{font-size:10.5px; text-transform:uppercase; letter-spacing:.7px; color:var(--ink-faint);
+    margin:10px 6px 4px; font-weight:700}
+  .bag-item{display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:var(--radius);
+    cursor:grab; border:1px solid transparent}
+  .bag-item:hover{background:var(--panel-2); border-color:var(--line)}
+  .bag-item:active{cursor:grabbing}
+  .swatch{width:8px; height:22px; border-radius:3px; flex:none}
+  .bag-item .meta{min-width:0}
+  .bag-item .name{font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .bag-item .sub{font-size:10.5px; color:var(--ink-faint)}
+  .tag{font-size:9px; text-transform:uppercase; letter-spacing:.5px; color:var(--ink-faint);
+       border:1px solid var(--line); border-radius:4px; padding:0 4px; margin-left:auto}
+
+  .main{display:grid; grid-template-rows:1fr var(--tl-h); min-width:0; min-height:0}
+
+  /* ---------- Monitor ---------- */
+  .monitor{background:var(--bg); border-bottom:1px solid var(--line); overflow-y:auto; padding:18px 22px; min-height:0}
+  .mon-empty{color:var(--ink-faint); height:100%; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px; text-align:center}
+  .mon-src{font-size:10.5px; text-transform:uppercase; letter-spacing:.8px; color:var(--ink-faint)}
+  .mon-title{font-size:22px; font-weight:700; margin:2px 0 8px}
+  .mon-row{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:14px}
+  .chip{font-size:11px; padding:2px 9px; border-radius:20px; border:1px solid var(--line); color:var(--ink-dim)}
+  .chip.dur{border-color:var(--seq-dist); color:#5fd3c4}
+  .mon-btn{background:var(--accent); color:#0b0e12; border:0; border-radius:5px; padding:6px 12px; font-size:12px; font-weight:600; cursor:pointer}
+  .mon-btn.ghost{background:var(--panel-2); color:var(--ink-dim); border:1px solid var(--line)}
+  .mon-btn:hover{filter:brightness(1.08)}
+  /* multi-select actions: plain block buttons; container lifted above any following content */
+  .mon-actions{position:relative; z-index:3; margin:10px 0 16px}
+  .mon-actions .mon-btn{display:block; width:-moz-fit-content; width:fit-content; max-width:100%; margin:0 0 10px 0}
+  .mon-actions .mon-btn:last-child{margin-bottom:0}
+  .mon-actions .mon-btn.danger{background:#3a1f27; color:#f0a8ba; border:1px solid var(--ender)}
+  .mon-actions .mon-btn.danger:hover{background:var(--ender); color:#fff; filter:none}
+  .mon-block{margin-bottom:14px; max-width:760px}
+  .mon-block h4{font-size:10.5px; text-transform:uppercase; letter-spacing:.8px; color:var(--ink-faint); margin:0 0 5px}
+  .read-aloud{background:var(--panel); border-left:3px solid var(--accent); border-radius:0 6px 6px 0;
+              padding:10px 14px; font-style:italic; color:#cdd6e2; max-width:760px}
+  .beats{margin:0; padding-left:18px; color:var(--ink-dim)} .beats li{margin:2px 0}
+  .seq-scene{border-left:2px solid var(--seq-dist); padding-left:12px}
+  .seq-head{color:var(--seq-dist) !important}
+  .pill-row{display:flex; gap:6px; flex-wrap:wrap}
+  .pill{font-size:11px; background:var(--panel-2); border:1px solid var(--line); border-radius:5px; padding:3px 8px; color:var(--ink-dim)}
+  .src-note{color:var(--ink-faint); font-size:11px; margin-top:4px}
+  .mon-pre{white-space:pre-wrap; color:var(--ink-dim)}
+  .statblock{background:var(--panel); border:1px solid var(--line); border-left:3px solid #d8553f; border-radius:6px; padding:10px 12px; margin:0 0 10px; max-width:760px}
+  .statblock.srd{border-left-color:#3fbf7f}
+  .sb-title{font-weight:700; margin-bottom:6px}
+  .sb-h{margin:8px 0 4px; font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--ink-faint)}
+  .sb-p{font-size:12px; color:var(--ink-dim); margin:2px 0}
+  .sb-note{font-size:11px; color:var(--ink-faint); margin-top:6px; font-style:italic}
+  .sb-srd{font-size:12px; color:var(--ink-dim)} .sb-srd code{background:var(--panel-2); padding:1px 5px; border-radius:4px}
+  .sb-table{border-collapse:collapse; margin:6px 0; font-size:12px}
+  .sb-table th,.sb-table td{border:1px solid var(--line); padding:2px 8px; text-align:center; color:var(--ink-dim)}
+  .sb-table th{color:var(--ink)}
+
+  /* ---------- Timeline ---------- */
+  .timeline-wrap{background:var(--panel); display:flex; flex-direction:column; min-height:0}
+  .tl-resizer{height:7px; flex:none; cursor:ns-resize; background:var(--line); position:relative}
+  .tl-resizer::after{content:''; position:absolute; left:50%; top:1.5px; transform:translateX(-50%);
+                     width:36px; height:4px; border-radius:2px; background:var(--ink-faint)}
+  .tl-resizer:hover{background:#39414d}
+  .tl-bar{display:flex; align-items:center; gap:8px; padding:7px 14px; border-bottom:1px solid var(--line)}
+  .tl-bar .ttl{font-weight:600; margin-right:4px}
+  .tl-bar button{background:var(--panel-2); color:var(--ink-dim); border:1px solid var(--line);
+                 border-radius:5px; padding:4px 9px; font-size:11px; cursor:pointer}
+  .tl-bar button:hover:not(:disabled){color:var(--ink); border-color:var(--ink-faint)}
+  .tl-bar button:disabled{opacity:.4; cursor:default}
+  .readout{margin-left:auto; font-size:11px; color:var(--ink-dim); white-space:nowrap}
+  .readout b{color:var(--ink); font-weight:600}
+  .readout .over{color:var(--warn)} .readout .under{color:var(--good)} .readout .on{color:var(--good)}
+  .saveNote{font-size:10.5px; color:var(--ink-faint); width:74px; text-align:right}
+  .tl-hint{padding:3px 14px; font-size:10.5px; color:var(--ink-faint); border-bottom:1px solid var(--line)}
+  .tl-scroll{overflow:auto; flex:1; position:relative}
+  .tl-canvas{position:relative; min-height:100%}
+
+  .ruler{position:sticky; top:0; height:var(--ruler-h); border-bottom:1px solid var(--line);
+         background:var(--panel-2); z-index:6; cursor:pointer}
+  .ruler .tick{position:absolute; top:0; height:100%; border-left:1px solid var(--line);
+               font-size:10px; color:var(--ink-faint); padding:5px 0 0 4px}
+  .ruler .tick.major{border-left-color:#3a414c}
+
+  .lanes{position:absolute; left:0; right:0; top:var(--ruler-h); bottom:0}
+  .lane{position:absolute; left:0; right:0; height:64px; border-bottom:1px dashed #232830}
+  .lane-label{position:sticky; left:0; float:left; font-size:9px; color:var(--ink-faint);
+              padding:2px 4px; background:rgba(27,30,36,.7); z-index:3}
+
+  .target-marker{position:absolute; top:0; bottom:0; width:0; border-left:2px dashed var(--warn); z-index:4; pointer-events:none}
+  .target-flag{position:absolute; top:2px; transform:translateX(4px); font-size:9px; color:var(--warn); white-space:nowrap}
+  .target-tint{position:absolute; top:0; bottom:0; right:0; background:repeating-linear-gradient(
+    -45deg, rgba(224,161,60,.03) 0 8px, transparent 8px 16px); pointer-events:none; z-index:1}
+
+  .snap-guide{position:absolute; top:var(--ruler-h); bottom:0; width:1px; background:var(--accent);
+              opacity:0; z-index:7; pointer-events:none; box-shadow:0 0 5px var(--accent)}
+  .snap-guide.on{opacity:.9}
+
+  .clip{position:absolute; height:54px; border-radius:6px; padding:6px 9px; overflow:hidden;
+        border:1px solid rgba(255,255,255,.14); cursor:grab; z-index:5; color:#fff;
+        box-shadow:0 2px 6px rgba(0,0,0,.35)}
+  .clip:active{cursor:grabbing}
+  .clip .c-title{font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .clip.seq .c-title{padding-left:15px}
+  .clip .c-meta{font-size:10px; opacity:.82; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .clip.seq .c-meta{padding-left:15px}
+  .clip.sel{outline:2px solid #fff; outline-offset:1px; z-index:8}
+  .clip .handle{position:absolute; top:0; bottom:0; width:14px; cursor:ew-resize; z-index:9;
+                display:flex; align-items:center; justify-content:center}
+  .clip .handle.l{left:0} .clip .handle.r{right:0}
+  .clip .handle::before{content:''; width:3px; height:56%; border-radius:2px;
+                        background:rgba(255,255,255,.22); transition:background .1s, height .1s}
+  .clip:hover .handle::before{background:rgba(255,255,255,.55)}
+  .clip .handle:hover::before{background:#fff; height:74%; box-shadow:0 0 0 1px rgba(0,0,0,.3)}
+  .clip.status-played{opacity:.5}
+  .clip.status-played .c-title::after{content:' ✓'; opacity:.85}
+  .clip .caret{position:absolute; left:15px; top:5px; font-size:10px; cursor:pointer; opacity:.9; z-index:10}
+  .clip .segs{position:absolute; left:6px; right:6px; bottom:5px; top:25px; display:flex; gap:2px}
+  .seg{flex:1; min-width:0; background:rgba(0,0,0,.18); border-radius:3px; font-size:9px; line-height:1.15;
+       padding:3px 4px; overflow:hidden; cursor:pointer; color:#fff; white-space:nowrap; text-overflow:ellipsis}
+  .seg:hover{background:rgba(0,0,0,.34)}
+  .seg.focus{outline:1px solid #fff}
+
+  .clip.overlay{height:30px; opacity:.92; background-image:repeating-linear-gradient(
+    -45deg, rgba(0,0,0,.10) 0 6px, transparent 6px 12px)}
+  .clip.overlay .c-meta{display:none}
+  .clip.overlay .c-title{padding-right:74px}
+  .clk-pips{font-size:9px; letter-spacing:1px; opacity:.9; margin-left:4px}
+  .clk-th{font-size:9px; opacity:.7; margin-left:6px; border:1px solid rgba(255,255,255,.3); border-radius:3px; padding:0 4px}
+  .clk-step{position:absolute; right:18px; top:50%; transform:translateY(-50%); display:flex; align-items:center; gap:4px; z-index:11}
+  .clk-step button{width:18px; height:18px; line-height:1; padding:0; border-radius:4px; border:1px solid rgba(0,0,0,.35);
+                   background:rgba(0,0,0,.28); color:#fff; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center}
+  .clk-step button:hover{background:rgba(0,0,0,.55)}
+  .clk-count{font-size:10px; color:#fff; min-width:26px; text-align:center; font-weight:600}
+
+  /* point-in-time fire markers: full-height hairline + a clickable flag at top; line never blocks clips */
+  .fire-marker{position:absolute; top:0; bottom:0; z-index:6; transform:translateX(-50%); width:14px; text-align:center; pointer-events:none}
+  .fire-marker .fm-flag{font-size:12px; line-height:1; pointer-events:auto; filter:drop-shadow(0 1px 1px rgba(0,0,0,.6))}
+  .fire-marker.run_beat .fm-flag{cursor:pointer}
+  .fire-marker::after{content:''; position:absolute; left:50%; top:14px; bottom:0; width:1px; background:currentColor; opacity:.35}
+  .fire-marker.run_beat{color:var(--accent)}
+  .fire-marker.world_state{color:var(--clock)}
+  .fire-banner{background:rgba(91,157,255,.12); border:1px solid var(--accent); border-radius:8px;
+               padding:10px 12px; margin-bottom:14px; display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+
+  .playhead{position:absolute; top:0; bottom:0; width:2px; background:var(--accent); z-index:10; pointer-events:none}
+  .playhead .grip{position:absolute; top:0; left:-7px; width:16px; height:var(--ruler-h);
+                  background:var(--accent); border-radius:0 0 4px 4px; cursor:ew-resize; pointer-events:auto;
+                  display:flex; align-items:center; justify-content:center; color:#0b0e12; font-size:10px}
+  .playhead .time{position:absolute; top:var(--ruler-h); left:6px; background:var(--accent); color:#0b0e12;
+                  font-size:10px; font-weight:700; padding:1px 5px; border-radius:0 4px 4px 0; white-space:nowrap}
+
+  .drag-ghost{position:fixed; z-index:999; pointer-events:none; padding:6px 10px; border-radius:6px;
+          color:#fff; font-size:12px; font-weight:600; box-shadow:0 6px 16px rgba(0,0,0,.5); opacity:.95}
+  .drop-ok{outline:2px dashed var(--accent); outline-offset:-4px}
+
+  .ctx{position:fixed; z-index:1000; background:var(--panel-2); border:1px solid var(--line);
+       border-radius:8px; padding:6px; min-width:210px; box-shadow:0 10px 30px rgba(0,0,0,.5)}
+  .ctx h5{margin:4px 8px; font-size:10px; text-transform:uppercase; letter-spacing:.6px; color:var(--ink-faint)}
+  .ctx button{display:flex; width:100%; align-items:center; gap:8px; background:none; border:0; color:var(--ink);
+              padding:6px 8px; border-radius:5px; font-size:12px; cursor:pointer; text-align:left}
+  .ctx button:hover{background:var(--accent); color:#0b0e12}
+  .ctx .sep{height:1px; background:var(--line); margin:5px 4px}
+  .ctx .danger:hover{background:var(--ender)}
+
+  /* entity editor modal */
+  .editor{position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1100; display:none; align-items:center; justify-content:center}
+  .editor.show{display:flex}
+  .ed-box{background:var(--panel); border:1px solid var(--line); border-radius:10px; width:min(680px,92vw); max-height:88vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,.6)}
+  .ed-head{padding:12px 16px; border-bottom:1px solid var(--line); font-weight:600}
+  .ed-head code{background:var(--panel-2); padding:1px 6px; border-radius:4px; color:var(--ink-dim); font-weight:400}
+  .ed-body{padding:14px 16px; overflow-y:auto}
+  .ed-row{display:flex; gap:10px; flex-wrap:wrap}
+  .ed-f{display:flex; flex-direction:column; gap:4px; font-size:11px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.5px; margin-bottom:12px; flex:1; min-width:120px}
+  .ed-f input,.ed-f select,.ed-f textarea{font:13px/1.45 inherit; text-transform:none; letter-spacing:0; color:var(--ink); background:var(--panel-2); border:1px solid var(--line); border-radius:6px; padding:7px 9px}
+  .ed-f textarea{resize:vertical; min-height:54px}
+  .ed-f input:focus,.ed-f select:focus,.ed-f textarea:focus{outline:none; border-color:var(--accent)}
+  .ed-foot{padding:12px 16px; border-top:1px solid var(--line); display:flex; align-items:center; gap:10px}
+  .ed-foot .ed-note{color:var(--ink-faint); font-size:11px; margin-right:auto}
+  .ed-foot button{background:var(--panel-2); color:var(--ink-dim); border:1px solid var(--line); border-radius:6px; padding:7px 14px; font-size:12px; cursor:pointer}
+  .ed-foot button.primary{background:var(--accent); color:#0b0e12; border:0; font-weight:600}
+  .ed-foot button.danger{border-color:var(--ender); color:#f0a8ba}
+  .ed-foot button:hover{filter:brightness(1.08)}
+  .ed-rels{border-top:1px solid var(--line); margin-top:6px; padding-top:10px}
+  .ed-rels-h{font-size:10.5px; text-transform:uppercase; letter-spacing:.6px; color:var(--ink-faint); margin-bottom:8px}
+  .ed-rel{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px}
+  .ed-rel-f{font-size:11px; color:var(--ink-dim); min-width:80px}
+  .rel-chips{display:flex; gap:6px; flex-wrap:wrap}
+  .rel-none{font-size:11px; color:var(--ink-faint)}
+  .rel-chip{display:inline-flex; align-items:center; gap:6px; font-size:11px; background:var(--panel-2); border:1px solid var(--line); border-radius:5px; padding:2px 4px 2px 8px}
+  .rel-chip.missing{border-color:var(--ender); color:var(--ender)}
+  .rel-go{cursor:pointer} .rel-go:hover{color:var(--accent)}
+  .rel-rm{cursor:pointer; color:var(--ink-faint); font-weight:700; padding:0 3px} .rel-rm:hover{color:var(--ender)}
+  .ed-rel-add,.ed-rel-new{font-size:11px; background:var(--panel-2); color:var(--ink-dim); border:1px solid var(--line); border-radius:5px; padding:3px 6px; cursor:pointer}
+  .ed-rel-add:hover,.ed-rel-new:hover{border-color:var(--accent)}
+  .ed-rels:empty{display:none}
+  .ed-clone{display:flex; gap:8px; margin-bottom:12px}
+  .ed-clone input{flex:1; font:13px inherit; color:var(--ink); background:var(--panel-2); border:1px solid var(--line); border-radius:6px; padding:7px 9px}
+  .ed-clone button{background:var(--panel-2); color:var(--ink-dim); border:1px solid var(--line); border-radius:6px; padding:0 12px; cursor:pointer; font-size:12px}
+  .ed-clone button:hover{border-color:var(--accent)}
+  .issue{font-size:11.5px; padding:5px 8px; border-radius:5px; margin-bottom:3px}
+  .issue.e{color:var(--err); background:rgba(229,96,77,.08)} .issue.w{color:var(--warn); background:rgba(224,161,60,.08)}
+  .issue[data-open]{cursor:pointer} .issue[data-open]:hover{outline:1px solid var(--accent)}
+  #btnIssues{border-color:var(--warn); color:var(--warn)}
+  .ed-chk{justify-content:space-between}
+  .ed-chk span:last-child{display:flex; align-items:center; gap:6px; font-weight:400; color:var(--ink-dim)}
+  .ed-chk input{accent-color:var(--accent); width:15px; height:15px}
+  .lib-grp{margin-bottom:14px} .lib-grp h4{margin:0 0 6px; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-dim)}
+  .lib-grp .lib-n{background:var(--panel-2); border-radius:8px; padding:1px 6px; font-size:10px; margin-left:4px}
+  .lib-items{display:flex; flex-wrap:wrap; gap:6px}
+  .lib-item{display:flex; flex-direction:column; align-items:flex-start; gap:1px; background:var(--panel-2); border:1px solid var(--line); border-radius:6px; padding:6px 9px; cursor:pointer; color:var(--ink); font:12px inherit; text-align:left}
+  .lib-item:hover{border-color:var(--accent)}
+  .lib-item .lib-id{font-size:10px; color:var(--ink-dim); font-family:ui-monospace,monospace}
+  .pill.ref{cursor:pointer; font:inherit; border-color:var(--accent); color:var(--ink)}
+  .pill.ref:hover{background:var(--accent); color:#0b0d12}
+  .pill.ref::before{opacity:.85}
+  .pill.ref[data-card^="npc::"]::before{content:'👤 '}
+  .pill.ref[data-card^="location::"]::before{content:'📍 '}
+  .pill.ref[data-card^="item::"]::before{content:'📦 '}
+  .pill.ref[data-card^="trap::"]::before{content:'⚠ '}
+  .pill.ref[data-card^="table::"]::before{content:'🎲 '}
+  .pill.ref[data-card^="quest::"]::before{content:'🎯 '}
+  .pill.ref[data-card^="creature::"]::before{content:'👹 '}
+  .npc-card .npc-prose{font-size:13px; line-height:1.5; color:var(--ink-dim)}
+  .npc-card .npc-prose p{margin:.2em 0}
+  .npc-mood{font-size:12.5px; color:var(--ink); background:var(--panel-2); border-left:3px solid var(--accent); border-radius:0 5px 5px 0; padding:6px 10px; margin-bottom:10px}
+  .npc-secret{background:rgba(224,161,60,.08); border:1px solid var(--warn); border-radius:8px; padding:4px 10px}
+  .npc-secret h4{color:var(--warn)}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="bag">
+    <div class="bag-head">
+      <img class="logo" src="AugurLogo.svg" alt="Augur" />
+    </div>
+    <div class="bag-scroll" id="bag"></div>
+  </aside>
+
+  <div class="main">
+    <section class="monitor" id="monitor"></section>
+
+    <section class="timeline-wrap">
+      <div class="tl-resizer" id="tlResizer" title="Drag up or down to resize the timeline"></div>
+      <div class="tl-bar">
+        <span class="ttl" id="sessTitle">Welcome to Augur — a guided tour</span>
+        <button id="btnUndo" title="Undo (Ctrl/Cmd-Z)">↶ Undo</button>
+        <button id="btnRedo" title="Redo (Ctrl/Cmd-Shift-Z)">↷ Redo</button>
+        <button id="btnAddLane">+ Track</button>
+        <button id="btnLoadVault" title="Load a Markdown vault folder into the Bag">⤒ Load Vault</button>
+        <button id="btnOpenAugur" title="Open a .augur campaign file">⤒ .augur</button>
+        <button id="btnCloseVault" title="Unload the vault and return to the built-in tutorial" style="display:none">✕ Close Vault</button>
+        <button id="btnNew" title="Create a new entity in the loaded vault" style="display:none">＋ New</button>
+        <button id="btnLibrary" title="Browse & edit every entity in the vault (locations, NPCs, items…)" style="display:none">📚 Library</button>
+        <button id="btnIssues" title="Show vault validation issues (dangling references, etc.)" style="display:none">⚠</button>
+        <button id="btnExport" title="Download the current vault (entities + timeline) as a .augur file" style="display:none">⤓ Save .augur</button>
+        <button id="btnSaveFolder" title="Write changes straight back to a folder on disk (needs localhost / a packaged build)" style="display:none">💾 Save to folder</button>
+        <button id="btnRecap" title="Export a Markdown recap (played clips + clock fires)">⤓ Recap</button>
+        <button id="btnReset" title="Clear saved state and reload the sample">Reset</button>
+        <span class="readout" id="readout"></span>
+        <span class="saveNote" id="saveNote"></span>
+        <input type="file" id="pickVault" webkitdirectory directory multiple style="display:none" />
+        <input type="file" id="pickVaultAugur" accept=".augur,.zip" style="display:none" />
+      </div>
+      <div class="tl-hint">Drag from the Bag · trim edges (snaps to neighbors) · Ctrl/Cmd-click to multi-select then group · ▸ expands a sequence · double-click empty space = emergent clip · right-click a clip</div>
+      <div class="tl-scroll" id="tlScroll">
+        <div class="tl-canvas" id="canvas">
+          <div class="ruler" id="ruler"></div>
+          <div class="snap-guide" id="snapGuide"></div>
+          <div class="lanes" id="lanes"></div>
+          <div class="target-tint" id="tint"></div>
+          <div class="target-marker" id="target"><span class="target-flag" id="targetFlag"></span></div>
+          <div class="playhead" id="playhead">
+            <div class="grip" title="Drag to move focus">⇿</div>
+            <div class="time" id="phTime">0:00</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="editor" id="editor"></div>
+<datalist id="srdList"></datalist>
+<script src="vault.js"></script>
+<script src="augur-zip.js"></script>
+<script src="vault-adapter.js"></script>
+<script src="vault-serialize.js"></script>
+<script src="vault-edit.js"></script>
+<script src="srd-bestiary.js"></script>
+<script>
+/* =========================================================================
+   Augur prototype — timeline feel + multi-select/group + undo + persistence
+   Vanilla JS, no dependencies. State persists to localStorage (Prototype 2).
+   ========================================================================= */
+
+const PX_PER_MIN = 4;
+const SNAP = 5;          // grid snap, minutes
+const SNAP_PX = 7;       // neighbor-snap pixel threshold
+const LANE_H = 64;
+const RULER_H = 26;
+const MIN_DUR = 10;
+let TARGET_MIN = 180;   // session target length (overridden when a vault's session sets one)
+const KEY = 'augur-proto1-v4';
+
+/* ---------- built-in tutorial Bag assets (the first-run guided tour) ----------
+   This sample data IS the tutorial: each block teaches a part of Augur, and the
+   timeline below walks the playhead through lessons 1–9. Replaced by any loaded vault. */
+const SCENES = {
+  t_welcome: { id:'t_welcome', type:'scene', title:'1 · Welcome to Augur', purpose:'Get oriented — what Augur is, and how this tour works.',
+    durMin:15, durMax:25, conf:'loose',
+    summary:'Augur is a session planner for tabletop RPGs, built like a video editor. You lay the beats of a session on a timeline, then “cut the session as it happens” — sliding a playhead through your plan while the table plays. This very timeline is the tour: drag the playhead (the vertical line) left-to-right, or click any block, and read what appears here in the center.',
+    beats:['Drag the playhead across the timeline below','Click any block to load its lesson here','Work left → right through lessons 1–9'],
+    npcs:[] },
+  t_bag: { id:'t_bag', type:'scene', title:'2 · The Bag (left panel)', purpose:'Your prep library — everything you might reach for this session.',
+    durMin:15, durMax:25, conf:'loose',
+    summary:'The Bag on the left is a shelf of reusable pieces, grouped into Scenes, Sequences, Clocks, and Session-enders. Nothing here is scheduled yet. Drag an item out of the Bag and drop it on the timeline to add it to the session; it stays in the Bag so you can reuse it. The little colored swatch tells you the item’s type at a glance.',
+    beats:['Find the four groups in the left panel','Drag a Bag item onto the timeline to schedule it','Items stay in the Bag — reuse them freely'],
+    npcs:[] },
+  t_monitor: { id:'t_monitor', type:'scene', title:'3 · The Monitor (center panel)', purpose:'The one panel you actually read at the table.',
+    durMin:20, durMax:30, conf:'tight',
+    summary:'The Monitor — this center panel — always shows the single thing you need right now: the block under the playhead, or whatever you have selected. Purpose, summary, beats, read-aloud text, NPCs, and stat blocks all surface here, so you’re never flipping pages mid-scene. Selection wins; otherwise it follows the topmost block under the focus cursor.',
+    readAloud:'Boxed “read-aloud” text appears in a panel like this — formatted and ready to read straight to your players.',
+    beats:['Selection beats the playhead for what’s shown','Everything to run the moment lives here','In a loaded vault, click any reference chip — NPC, location, item, trap, table, quest — to open its card; cards link to each other','With a real vault loaded, an ✎ Edit button appears to change it inline'],
+    npcs:['Example NPC: the Innkeeper','Example NPC: a nervous courier'] },
+  t_timeline: { id:'t_timeline', type:'scene', title:'4 · The Timeline (bottom)', purpose:'Sequence the session — order, length, and layering.',
+    durMin:15, durMax:25, conf:'loose',
+    summary:'The timeline runs your session left-to-right. Drag a block to reorder it. Drag its left or right edge to change how long you expect it to run. Stack blocks on separate tracks (rows) when things can happen in parallel or you’re unsure of the order. Up top, a readout compares your total planned time against your target length, with a dashed target line on the canvas.',
+    beats:['Drag a block to move it; drag an edge to resize it','Stack on tracks for parallel or uncertain beats','Watch the Σ total vs. the dashed target line'],
+    npcs:[] },
+  t_playhead: { id:'t_playhead', type:'scene', title:'5 · The Playhead & statuses', purpose:'Track where you are and what’s already been played.',
+    durMin:15, durMax:25, conf:'tight',
+    summary:'The playhead is the vertical line across the timeline. Slide it to follow the table’s progress and the Monitor keeps pace. Right-click a block to mark it Played once you’ve run it (it earns a ✓) or leave it Planned. Statuses keep a long session legible at a glance — and they feed the Recap you can export when the night ends.',
+    beats:['Drag the playhead to follow play','Right-click a block → mark Played / Planned','Played blocks show ✓ and feed the Recap export'],
+    npcs:[] },
+  t_further: { id:'t_further', type:'scene', title:'9 · Going further — your own content', purpose:'Beyond the tour: load and edit real material.',
+    durMin:20, durMax:30, conf:'loose',
+    summary:'This tour is built-in sample data. To run your own games, load a vault — an .augur file (or a folder of Markdown) holding your scenes, NPCs, locations, items, and monsters. Once loaded you get ✎ Edit on any entity, a 📚 Library to browse everything, a ⚠ panel that lists broken links, the full SRD 5.2 bestiary to clone stat blocks from, and a Recap export at the end of the session.',
+    beats:['Open an .augur or Markdown vault to use your own content','📚 Library browses every entity; ✎ Edit changes them inline','Clone SRD monsters into stat blocks; export a Recap when you’re done'],
+    npcs:[] },
+  /* sub-scenes that live inside the demo sequence (lesson 6) */
+  t_seq_a: { id:'t_seq_a', type:'scene', title:'Why group scenes?', purpose:'Bundle beats that belong together.',
+    durMin:10, durMax:15, conf:'tight',
+    summary:'Group a side-dungeon, a multi-room location, or a recurring thread so it travels as one block you can move and time as a unit. Select two or more scenes, then “Group into a sequence.”',
+    beats:['Select 2+ scenes on the timeline','Use “Group into a sequence”','The new sequence lands in the Bag, reusable'],
+    npcs:[] },
+  t_seq_b: { id:'t_seq_b', type:'scene', title:'Expand & ungroup', purpose:'Open a sequence or break it apart.',
+    durMin:10, durMax:15, conf:'tight',
+    summary:'Click the ▸ caret to expand a sequence in place and focus a single scene inside it. Right-click a sequence → Ungroup to break it back into loose scenes you can rearrange individually.',
+    beats:['▸ expands the sequence; click a segment to focus it','Right-click → Ungroup to split it apart'],
+    npcs:[] },
+};
+const SEQUENCES = {
+  seq_group: { id:'seq_group', type:'sequence', kind:'tight', title:'6 · Sequences — grouping', sceneIds:['t_seq_a','t_seq_b'], dur:30,
+    summary:'A Sequence bundles scenes that belong together. “Tight” sequences run as one unit once entered (a bounded dungeon); “distributed” ones interleave across the session. On the timeline a sequence is one collapsible block — expand it with the ▸ caret, or right-click to Ungroup.' },
+};
+const CLOCKS = {
+  clk_tour:{ id:'clk_tour', type:'clock', title:'7 · Clocks & fires', scope:'campaign', segments:4,
+    summary:'A Clock is the world’s timer, not the party’s. It advances only when YOU tick it (the + button on the clock block), independent of the playhead. When a clock reaches a threshold it “fires” — either prompting you to run a beat (with a jump button), or changing the world-state (logged in the Monitor). Lay a clock on an overlay track so it spans the whole session as ambient pressure.',
+    thresholds:[
+      { at:2, fires:'run_beat', sequenceId:'seq_group' },
+      { at:4, fires:'world_state', note:'The storm breaks — a consequence enters the world. World-state fires are logged here under “World-state so far.” Try ticking this clock with its + button.' },
+    ] },
+};
+const ENDERS = {
+  e_cut:{ id:'e_cut', type:'scene', _kit:'ender', title:'8 · Session-enders 🏁', purpose:'A portable beat to land the session.',
+    durMin:10, durMax:20, conf:'loose', ender:true,
+    summary:'Flag any scene as a Session-ender (the 🏁 toggle in its editor) when it can cleanly close a night — a cliffhanger, a hard cut, a quiet beat. Enders gather in their own Bag group, so when time’s running short you can grab one and end strong. The 🏁 shows on the block and here in the Monitor.',
+    beats:['Toggle “Session ender” in a scene’s editor','Enders collect in the Bag’s Session-enders group','Drop one in when the clock on the wall is winning'],
+    npcs:[] },
+};
+
+const ASSETS = {};
+[SCENES,SEQUENCES,CLOCKS,ENDERS].forEach(o=>Object.values(o).forEach(a=>ASSETS[a.id]=a));
+let dynamicAssets = {};                 // runtime-created (stubs + grouped sequences)
+function registerAsset(a){ ASSETS[a.id]=a; dynamicAssets[a.id]=a; }
+
+/* ---------- mutable state ---------- */
+const SESSION_TITLE = 'Welcome to Augur — a guided tour';
+let LANES = 4;
+let playhead = 10;
+let selected = new Set();               // multi-select: clip ids
+let clipSeq = 1, groupSeq = 1, stubSeq = 1, fireSeq = 1;
+let fires = [];                         // clock fires that have occurred
+let pendingFire = null;                 // most recent run-beat fire awaiting GM action
+let vaultLoaded = false;                // true once a Markdown vault replaces the seed
+let VAULT = null;                       // full parsed vault — the editable source of truth in vault mode
+let editEntity = null, monEditRef = null;
+let lastAssetRecs = [];                 // binary asset recs from the loaded vault (carried through on export)
+let vaultDirHandle = null;              // File System Access handle for in-place "Save to folder"
+
+function seedClips(){ return [
+  // Lessons 1–9 run left→right on the main track; the clock overlays the whole tour.
+  mkClip('t_welcome',    0,  20, 0, 'played'),
+  mkClip('t_bag',       20,  20, 0, 'planned'),
+  mkClip('t_monitor',   40,  25, 0, 'planned'),
+  mkClip('t_timeline',  65,  20, 0, 'planned'),
+  mkClip('t_playhead',  85,  20, 0, 'planned'),
+  mkClip('seq_group',  105,  30, 0, 'planned'),
+  mkClip('e_cut',      135,  18, 1, 'planned'),
+  mkClip('t_further',  155,  25, 0, 'planned'),
+  mkClip('clk_tour',     0, 180, 3, 'planned', {overlay:true}),
+]; }
+let clips = seedClips();
+
+function mkClip(sourceId, start, dur, track, status, extra={}){
+  const a = ASSETS[sourceId];
+  return {
+    id:'c'+(clipSeq++), sourceId, sourceType:a.type,
+    start, dur, track, status,
+    label: extra.label || null,
+    overlay: extra.overlay || (a.type==='clock'),
+    collapsed: a.type==='sequence' ? true : undefined,
+    focusSceneId: null,
+    filled: a.type==='clock' ? 0 : undefined,   // clock advancement (GM-driven)
+  };
+}
+
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const minToX = m => m * PX_PER_MIN;
+const xToMin = x => x / PX_PER_MIN;
+const snap = m => Math.max(0, Math.round(m/SNAP)*SNAP);
+const fmt = m => { m=Math.round(m); const s=m<0?'-':''; m=Math.abs(m); return s+Math.floor(m/60)+':'+String(m%60).padStart(2,'0'); };
+function getCss(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+function curTlHeight(){ return parseInt(getComputedStyle(document.documentElement).getPropertyValue('--tl-h'))||360; }
+function colorFor(a){
+  if(a.type==='clock') return getCss('--clock');
+  if(a.type==='sequence') return a.kind==='tight'? getCss('--seq-tight'):getCss('--seq-dist');
+  if(a.ender) return getCss('--ender');
+  return getCss('--scene');
+}
+function expectedDur(a){ return a.dur!=null ? a.dur : Math.round((a.durMin+a.durMax)/2); }
+function totalMinutes(){
+  const end = clips.reduce((mx,c)=>Math.max(mx, c.start+c.dur), 0);
+  return Math.max(TARGET_MIN+60, end+60);
+}
+function statusLabel(s){ return {planned:'planned',played:'played'}[s]||s; }
+function selectOnly(id){ selected = new Set([id]); }
+function toggleSel(id){ if(selected.has(id)) selected.delete(id); else selected.add(id); }
+function selectClip(id){ selectOnly(id); }
+
+/* =================== RENDER =================== */
+function renderBag(){
+  const scenes = Object.values(ASSETS).filter(a=>a.type==='scene' && a._kit!=='ender');
+  const seqs   = Object.values(ASSETS).filter(a=>a.type==='sequence');
+  const clocks = Object.values(ASSETS).filter(a=>a.type==='clock');
+  const enders = Object.values(ASSETS).filter(a=>a._kit==='ender');
+  const groups = [['Scenes',scenes],['Sequences',seqs],['Clocks',clocks],['Session-enders',enders]];
+  const bag = $('bag'); bag.innerHTML='';
+  for(const [name,items] of groups){
+    const g=document.createElement('div'); g.className='bag-group'; g.innerHTML=`<h3>${name}</h3>`;
+    for(const a of items){
+      const el=document.createElement('div'); el.className='bag-item'; el.dataset.asset=a.id;
+      const sub = a.type==='clock' ? `${a.scope} · ${a.segments} segments`
+        : a.type==='sequence' ? `${a.kind} · ${a.sceneIds.length} scene${a.sceneIds.length>1?'s':''}`
+        : `${a.durMin}–${a.durMax} min · ${a.conf}`;
+      const tag = a.type==='sequence'?a.kind : a.type==='clock'?'clock' : (a._kit==='ender'?'ender':(a.isStub?'stub':'scene'));
+      el.innerHTML = `<span class="swatch" style="background:${colorFor(a)}"></span>
+        <div class="meta"><div class="name">${a.title}</div><div class="sub">${sub}</div></div>
+        <span class="tag">${tag}</span>`;
+      el.addEventListener('pointerdown', e=>startBagDrag(e, a));
+      g.appendChild(el);
+    }
+    bag.appendChild(g);
+  }
+}
+
+function renderTimeline(){
+  const total = totalMinutes();
+  const width = minToX(total);
+  $('canvas').style.width = width+'px';
+  $('canvas').style.height = (RULER_H + LANES*LANE_H + 6)+'px';
+
+  const ruler=$('ruler'); ruler.innerHTML='';
+  for(let m=0;m<=total;m+=15){
+    const t=document.createElement('div'); t.className='tick'+(m%60===0?' major':'');
+    t.style.left=minToX(m)+'px'; if(m%30===0) t.textContent=fmt(m);
+    ruler.appendChild(t);
+  }
+  const lanes=$('lanes'); lanes.innerHTML='';
+  lanes.style.height=(LANES*LANE_H)+'px';
+  for(let i=0;i<LANES;i++){
+    const l=document.createElement('div'); l.className='lane'; l.style.top=(i*LANE_H)+'px';
+    l.innerHTML=`<span class="lane-label">${i===LANES-1?'overlays':'track '+(i+1)}</span>`;
+    l.dataset.lane=i; lanes.appendChild(l);
+  }
+  $('target').style.left=minToX(TARGET_MIN)+'px';
+  $('targetFlag').textContent='target '+fmt(TARGET_MIN);
+  $('tint').style.left=minToX(TARGET_MIN)+'px';
+  $('tint').style.width=(width-minToX(TARGET_MIN))+'px';
+
+  document.querySelectorAll('.clip').forEach(n=>n.remove());
+  for(const c of clips) lanes.appendChild(renderClip(c));
+
+  for(const fr of fires) lanes.appendChild(renderFireMarker(fr));
+
+  renderPlayhead();
+  updateReadout();
+}
+
+function renderFireMarker(fr){
+  const m=document.createElement('div');
+  m.className='fire-marker '+fr.flavor;
+  m.style.left=minToX(fr.atMin)+'px';
+  const label = fr.flavor==='run_beat'
+    ? 'run-beat: '+((ASSETS[fr.sequenceId]||{}).title||'beat')
+    : 'world-state: '+(fr.note||'');
+  m.title = `${fr.clockTitle} fired @ ${fmt(fr.atMin)} — ${label}`;
+  m.innerHTML=`<span class="fm-flag">⚑</span>`;
+  m.querySelector('.fm-flag').addEventListener('pointerdown', e=>{ e.stopPropagation(); if(fr.flavor==='run_beat') jumpToFire(fr); });
+  return m;
+}
+
+function renderClip(c){
+  const a=ASSETS[c.sourceId];
+  const isSeq=a.type==='sequence' && !c.overlay;
+  const expanded=isSeq && !c.collapsed;
+  const el=document.createElement('div');
+  el.className='clip status-'+c.status+(c.overlay?' overlay':'')+(isSeq?' seq':'')
+              +(selected.has(c.id)?' sel':'')+(expanded?' expanded':'');
+  el.dataset.clip=c.id;
+  el.style.left=minToX(c.start)+'px';
+  el.style.width=Math.max(minToX(c.dur),28)+'px';
+  el.style.top=(c.track*LANE_H + (c.overlay?6:5))+'px';
+  el.style.background=colorFor(a);
+  const title=c.label||a.title;
+  let inner;
+  if(a.type==='clock'){
+    const seg=a.segments||4, f=Math.max(0,Math.min(a.segments||4, c.filled||0));
+    const pips='●'.repeat(f)+'○'.repeat(Math.max(0,seg-f));
+    const nThresh=(a.thresholds||[]).length;
+    inner=`<div class="handle l"></div>
+      <div class="c-title">⏱ ${title} <span class="clk-pips">${pips}</span>${nThresh?`<span class="clk-th">${nThresh} threshold${nThresh>1?'s':''}</span>`:''}</div>
+      <div class="clk-step"><button class="clk-minus" title="Tick back">−</button><span class="clk-count">${f}/${seg}</span><button class="clk-plus" title="Advance the clock">+</button></div>
+      <div class="handle r"></div>`;
+  } else {
+    inner=`<div class="handle l"></div>`;
+    if(isSeq) inner+=`<span class="caret">${c.collapsed?'▸':'▾'}</span>`;
+    inner+=`<div class="c-title">${title}${(a.type==='scene'&&a.ender)?' 🏁':''}</div>`;
+    if(expanded){
+      inner+=`<div class="segs">`+a.sceneIds.map(id=>{
+        const s=ASSETS[id]; const d=expectedDur(s);
+        return `<div class="seg${c.focusSceneId===id?' focus':''}" data-scene="${id}" style="flex:${d}" title="${s.title}">${s.title}</div>`;
+      }).join('')+`</div>`;
+    } else {
+      const meta = isSeq ? `${a.sceneIds.length} scenes · ${statusLabel(c.status)}`
+        : a.durMin!=null ? `${a.durMin}–${a.durMax}m · ${statusLabel(c.status)}`
+        : `~${a.dur}m · ${statusLabel(c.status)}`;
+      inner+=`<div class="c-meta">${meta}</div>`;
+    }
+    inner+=`<div class="handle r"></div>`;
+  }
+  el.innerHTML=inner;
+  el.addEventListener('pointerdown', e=>onClipPointerDown(e,c));
+  el.addEventListener('contextmenu', e=>{e.preventDefault(); openCtx(e,c);});
+  return el;
+}
+
+function renderPlayhead(){ $('playhead').style.left=minToX(playhead)+'px'; $('phTime').textContent=fmt(playhead); }
+
+function updateReadout(){
+  const content=clips.filter(c=>!c.overlay);
+  const end=content.reduce((m,c)=>Math.max(m,c.start+c.dur),0);
+  const sum=content.reduce((s,c)=>s+c.dur,0);
+  const d=end-TARGET_MIN;
+  const cls=d>0?'over':(d<0?'under':'on');
+  const delta=d===0?'on target':(d>0?'+'+fmt(d)+' over':fmt(d)+' under');
+  $('readout').innerHTML=`Σ <b>${fmt(sum)}</b> stacked · ends <b>${fmt(end)}</b> · target <b>${fmt(TARGET_MIN)}</b> <span class="${cls}">(${delta})</span> · ${content.length} clips`;
+}
+
+function updateButtons(){
+  $('btnUndo').disabled = undoStack.length===0;
+  $('btnRedo').disabled = redoStack.length===0;
+  $('btnCloseVault').style.display = vaultLoaded ? 'inline-block' : 'none';
+  $('btnNew').style.display = vaultLoaded ? 'inline-block' : 'none';
+  $('btnLibrary').style.display = vaultLoaded ? 'inline-block' : 'none';
+  $('btnExport').style.display = vaultLoaded ? 'inline-block' : 'none';
+  $('btnSaveFolder').style.display = (vaultLoaded && typeof window!=='undefined' && window.showDirectoryPicker) ? 'inline-block' : 'none';
+  const nIss = (VAULT && VAULT.issues) ? (VAULT.issues.errors.length + VAULT.issues.warnings.length) : 0;
+  const bi=$('btnIssues'); bi.style.display = nIss ? 'inline-block' : 'none'; bi.textContent = '⚠ '+nIss;
+}
+
+/* =================== MONITOR =================== */
+function monitorClip(){
+  if(selected.size===1){ const id=[...selected][0]; const c=clips.find(c=>c.id===id); if(c) return {c,via:'selection'}; }
+  const under=clips.filter(c=>!c.overlay && playhead>=c.start && playhead<c.start+c.dur).sort((a,b)=>a.track-b.track);
+  if(under[0]) return {c:under[0],via:'playhead'};
+  return null;
+}
+function activeClocks(){
+  return clips.filter(c=>c.overlay && playhead>=c.start && playhead<c.start+c.dur).map(c=>ASSETS[c.sourceId]);
+}
+function renderMonitor(){
+  const mon=$('monitor');
+
+  if(selected.size>1){
+    const cs=[...selected].map(id=>clips.find(c=>c.id===id)).filter(Boolean).sort((a,b)=>a.start-b.start);
+    const allScenes=cs.every(c=>c.sourceType==='scene');
+    mon.innerHTML=fireBanner()+`<div class="mon-src">multi-select</div>
+      <div class="mon-title">${cs.length} clips selected</div>
+      <div class="mon-actions">
+        ${allScenes?`<button class="mon-btn" id="btnGroup" type="button">⤊ Group into a sequence</button>`:`<span class="chip">mixed selection — group needs scenes only</span>`}
+        <button class="mon-btn ghost danger" id="btnDelSel" type="button">🗑 Remove ${cs.length} clips</button>
+      </div>
+      <div class="mon-block"><h4>Selected, in time order</h4>
+        <div class="pill-row">${cs.map(c=>`<span class="pill">${c.label||ASSETS[c.sourceId].title}</span>`).join('')}</div></div>
+      <div class="src-note">Ctrl/Cmd-click clips to add or remove. Grouping creates a new sequence in the Bag and replaces these clips with one collapsible block — the inverse of Ungroup, so you can reconnect scenes you split apart.</div>`;
+    const g=$('btnGroup'); if(g) g.addEventListener('click', groupSelection);
+    const dsel=$('btnDelSel'); if(dsel) dsel.addEventListener('click', deleteSelected);
+    wireFireBtns();
+    return;
+  }
+
+  const sel=monitorClip();
+  const clocks=activeClocks();
+  if(!sel){
+    mon.innerHTML=fireBanner()+`<div class="mon-empty"><div style="font-size:30px">◎</div>
+      <div>No clip under the playhead.</div>
+      <div style="font-size:11px">Drag the playhead, or select a clip. The Monitor follows selection, then the topmost clip under the focus cursor.</div></div>`;
+    wireFireBtns();
+    return;
+  }
+  const c=sel.c, a=ASSETS[c.sourceId];
+  const title=c.label||a.title;
+  const isSeq=a.type==='sequence';
+  const pressure = clocks.length? `<div class="mon-block"><h4>World pressure (active clocks)</h4>
+     <div class="pill-row">${clocks.map(k=>`<span class="pill" style="border-color:${getCss('--clock')};color:#e8c184">⏱ ${k.title}</span>`).join('')}</div></div>`:'';
+  const durChip = a.durMin!=null ? `<span class="chip dur">${a.durMin}–${a.durMax} min · ${a.conf} estimate</span>`
+    : a.dur!=null ? `<span class="chip dur">~${a.dur} min</span>`:'';
+  const enderChip = a.ender? `<span class="chip" title="This scene can be used to close out a session">🏁 session-ender</span>`:'';
+
+  let body;
+  if(isSeq){
+    if(c.focusSceneId && a.sceneIds.includes(c.focusSceneId)){
+      const s=ASSETS[c.focusSceneId];
+      body=`<div class="mon-block seq-scene"><h4 class="seq-head">Focused scene in "${a.title}" — ${s.title}</h4>${sceneInner(s)}</div>
+        <div class="src-note">Click another segment on the clip to focus it, or collapse the clip to see the whole sequence.</div>`;
+    } else {
+      body=`${a.summary?`<div class="mon-block"><h4>Sequence · ${a.kind}</h4>${a.summary}</div>`:''}
+        <div class="mon-block"><h4>${a.sceneIds.length} scenes run together · expand the clip (▸) or right-click to ungroup</h4></div>
+        ${a.sceneIds.map((id,i)=>{const s=ASSETS[id]; return `<div class="mon-block seq-scene">
+          <h4 class="seq-head">Scene ${i+1} of ${a.sceneIds.length} — ${s.title}</h4>${sceneInner(s)}</div>`;}).join('')}`;
+    }
+  } else {
+    body = sceneInner(a);
+  }
+
+  const worldChanges = fires.filter(f=>f.flavor==='world_state' && f.atMin<=playhead).sort((x,y)=>x.atMin-y.atMin);
+  const worldHtml = worldChanges.length
+    ? `<div class="mon-block"><h4>World-state so far</h4><ul class="beats">${worldChanges.map(f=>`<li>${fmt(f.atMin)} — ${f.note} <span style="color:var(--ink-faint)">(${f.clockTitle})</span></li>`).join('')}</ul></div>`
+    : '';
+
+  monEditRef = (isSeq && c.focusSceneId && a.sceneIds.includes(c.focusSceneId)) ? {type:'scene', id:c.focusSceneId} : {type:a.type, id:c.sourceId};
+  mon.innerHTML=fireBanner()+`
+    <div class="mon-src">${a.type}${a.kind?' · '+a.kind:''} · shown via ${sel.via}</div>
+    <div class="mon-title">${title}</div>
+    <div class="mon-row"><span class="chip">${statusLabel(c.status)}</span>${durChip}${enderChip}${vaultLoaded?`<button class="mon-btn" id="btnEditEntity" type="button" style="padding:3px 10px">✎ Edit ${monEditRef.type}</button>`:''}</div>
+    ${body}
+    ${pressure}
+    ${worldHtml}`;
+  wireFireBtns();
+  const eb=$('btnEditEntity'); if(eb) eb.onclick=()=>openEditor(monEditRef.type, monEditRef.id);
+}
+function _esc(s){ return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function mdInline(s){ return _esc(s)
+  .replace(/\*\*\*([^*]+)\*\*\*/g,'<strong><em>$1</em></strong>')
+  .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+  .replace(/\*([^*]+)\*/g,'<em>$1</em>'); }
+/* light Markdown → HTML for stat blocks: pipe tables, ##-#### headings, bold/italic, lines */
+function mdLite(md){
+  const lines=String(md||'').split('\n'); let html=''; let i=0;
+  while(i<lines.length){
+    const l=lines[i];
+    if(l.trim()===''){ i++; continue; }
+    if(l.includes('|') && i+1<lines.length && /^[\s|:-]+$/.test(lines[i+1])){
+      const cells=x=>x.replace(/^\||\|$/g,'').split('|').map(c=>c.trim());
+      const head=cells(l); i+=2; const rows=[];
+      while(i<lines.length && lines[i].includes('|')){ rows.push(cells(lines[i])); i++; }
+      html+='<table class="sb-table"><thead><tr>'+head.map(h=>'<th>'+mdInline(h)+'</th>').join('')
+          +'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(c=>'<td>'+mdInline(c)+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
+      continue;
+    }
+    const hm=l.match(/^#{2,4}\s+(.+)$/);
+    if(hm){ html+='<h5 class="sb-h">'+mdInline(hm[1])+'</h5>'; i++; continue; }
+    html+='<div class="sb-p">'+mdInline(l)+'</div>'; i++;
+  }
+  return html;
+}
+/* render a bundled SRD 5.2 (2024) monster (schema from srd-bestiary.js) as Markdown */
+function srdToMarkdown(m){
+  let md=`**${m.name}**\n*${m.meta}*\n\n- **AC** ${m.ac}${m.init?`   **Initiative** ${m.init}`:''}\n- **HP** ${m.hp}\n- **Speed** ${m.speed}\n\n`;
+  md+=`| STR | DEX | CON | INT | WIS | CHA |\n|---|---|---|---|---|---|\n| ${m.abil.map(a=>`${a[0]} (${a[1]})`).join(' | ')} |\n\n`;
+  if(m.saves)md+=`- **Saving Throws** ${m.saves}\n`;
+  if(m.skills)md+=`- **Skills** ${m.skills}\n`;
+  if(m.vulnerabilities)md+=`- **Vulnerabilities** ${m.vulnerabilities}\n`;
+  if(m.resistances)md+=`- **Resistances** ${m.resistances}\n`;
+  if(m.immunities)md+=`- **Immunities** ${m.immunities}\n`;
+  if(m.gear)md+=`- **Gear** ${m.gear}\n`;
+  md+=`- **Senses** ${m.senses}\n- **Languages** ${m.languages}\n- **CR** ${m.cr}\n`;
+  for(const sec of (m.sections||[])){ md+=`\n### ${sec[0]}\n`; for(const e of sec[1]) md+= e[0]?`\n***${e[0]}.*** ${e[1]}\n`:`\n${e[1]}\n`; }
+  return md;
+}
+function statBlockHtml(c){
+  const head=`<div class="sb-title">${mdInline(c.title)}${c.cr!=null?` · CR ${c.cr}`:''}</div>`;
+  const note=c.notes?`<div class="sb-note">${mdInline(c.notes)}</div>`:'';
+  if(c.statblock) return `<div class="statblock">${head}${mdLite(c.statblock)}${note}</div>`;   // GM's custom block wins
+  if(c.srd){
+    const m=(typeof SRD_BESTIARY!=='undefined') && SRD_BESTIARY[c.srd];
+    if(m) return `<div class="statblock srd">${mdLite(srdToMarkdown(m))}${note}</div>`;
+    return `<div class="statblock srd">${head}<div class="sb-srd">SRD: <code>${_esc(c.srd)}</code> — not in the bundled bestiary yet (add it to srd-bestiary.js)</div>${note}</div>`;
+  }
+  return `<div class="statblock">${head}${note}</div>`;
+}
+function pillBlock(label, names){ return names&&names.length?`<div class="mon-block"><h4>${label}</h4><div class="pill-row">${names.map(n=>`<span class="pill">${_esc(n)}</span>`).join('')}</div></div>`:''; }
+/* refPills: clickable chips for scene-referenced entities (string fallback for the built-in tour). */
+function refPills(label, type, arr){
+  if(!arr||!arr.length) return '';
+  return `<div class="mon-block"><h4>${label}</h4><div class="pill-row">${arr.map(r=>{
+      const t=(r&&typeof r==='object')?r.title:r; const id=(r&&typeof r==='object')?r.id:null;
+      return id?`<button class="pill ref" type="button" data-card="${type}::${_esc(id)}" title="Open ${type} details">${_esc(t)}</button>`:`<span class="pill">${_esc(t)}</span>`;
+    }).join('')}</div></div>`;
+}
+function sceneInner(a){
+  return `${a.purpose?`<div class="mon-block"><h4>Purpose</h4>${a.purpose}</div>`:''}
+    ${a.readAloud?`<div class="mon-block"><h4>Read-aloud</h4><div class="read-aloud">${a.readAloud}</div>
+       <div class="src-note">Read-aloud / “box text” — in Augur, paste your own verbatim prose from your licensed material here.</div></div>`:''}
+    ${a.summary?`<div class="mon-block"><h4>Summary</h4>${a.summary}</div>`:''}
+    ${a.beats&&a.beats.length?`<div class="mon-block"><h4>Beats</h4><ul class="beats">${a.beats.map(b=>`<li>${b}</li>`).join('')}</ul></div>`:''}
+    ${a.sensory?`<div class="mon-block"><h4>Sensory</h4><div class="mon-pre">${a.sensory}</div></div>`:''}
+    ${a.ifThey?`<div class="mon-block"><h4>If they…</h4><div class="mon-pre">${a.ifThey}</div></div>`:''}
+    ${a.creatures&&a.creatures.length?`<div class="mon-block"><h4>Creatures & stat blocks</h4>${a.creatures.map(statBlockHtml).join('')}</div>`:''}
+    ${a.treasure?`<div class="mon-block"><h4>Treasure</h4><div class="mon-pre">${a.treasure}</div></div>`:''}
+    ${refPills('NPCs','npc',a.npcs)}
+    ${refPills('Locations','location',a.locations)}
+    ${refPills('Items','item',a.items)}
+    ${refPills('Traps','trap',a.traps)}
+    ${refPills('Tables','table',a.tables)}
+    ${refPills('Quests','quest',a.quests)}`;
+}
+
+/* =================== INTERACTION =================== */
+let drag=null;
+function onClipPointerDown(e,c){
+  if(e.button!==0) return;
+  // clock advance / retract steppers (GM-driven, decoupled from the playhead)
+  if(e.target.classList.contains('clk-plus')){  e.stopPropagation(); stepClock(c, 1);  return; }
+  if(e.target.classList.contains('clk-minus')){ e.stopPropagation(); stepClock(c, -1); return; }
+  // caret toggles collapse (view-only, not undoable)
+  if(e.target.classList.contains('caret')){ e.stopPropagation(); c.collapsed=!c.collapsed; if(c.collapsed) c.focusSceneId=null; commit(); return; }
+  // clicking an expanded segment focuses that scene
+  const seg=e.target.closest('.seg');
+  if(seg){ e.stopPropagation(); selectOnly(c.id); c.focusSceneId=seg.dataset.scene; commit(); return; }
+
+  const isHandle=e.target.classList.contains('handle');
+  const side=e.target.classList.contains('l')?'l':'r';
+  e.stopPropagation();
+
+  if(e.metaKey||e.ctrlKey||e.shiftKey){ toggleSel(c.id); commit(); return; }   // modifier = multi-select, no drag
+  if(!selected.has(c.id)) selectOnly(c.id);
+  renderTimeline(); renderMonitor();
+
+  const items = isHandle ? [{c,start:c.start,dur:c.dur,track:c.track}]
+    : [...selected].map(id=>{const cc=clips.find(x=>x.id===id); return {c:cc,start:cc.start,dur:cc.dur,track:cc.track};});
+  drag={ primary:c, mode:isHandle?('trim-'+side):'move', startX:e.clientX, startY:e.clientY, moved:false, items };
+  window.addEventListener('pointermove', onDragMove);
+  window.addEventListener('pointerup', onDragUp, {once:true});
+}
+
+function snapEdges(exclude){
+  const ex=new Set(exclude); const out=[];
+  for(const c of clips){ if(ex.has(c))continue; out.push(c.start, c.start+c.dur); }
+  out.push(playhead, TARGET_MIN, 0);
+  return out;
+}
+function snapValue(target, candidates, thr){
+  let best=null, bestD=thr;
+  for(const cand of candidates){ const d=Math.abs(target-cand); if(d<=bestD){ bestD=d; best=cand; } }
+  return best;
+}
+function showGuide(min){ const g=$('snapGuide'); if(min==null){ g.classList.remove('on'); return; } g.style.left=minToX(min)+'px'; g.classList.add('on'); }
+
+function onDragMove(e){
+  if(!drag) return;
+  if(!drag.moved && (Math.abs(e.clientX-drag.startX)>2||Math.abs(e.clientY-drag.startY)>2)){ drag.moved=true; pushHistory(); }
+  if(!drag.moved) return;
+  const dxMin=xToMin(e.clientX-drag.startX);
+  const thr=SNAP_PX/PX_PER_MIN;
+
+  if(drag.mode==='move'){
+    const p=drag.items.find(it=>it.c===drag.primary);
+    let ns=p.start+dxMin, guide=null;
+    const edges=snapEdges(drag.items.map(it=>it.c));
+    const ss=snapValue(ns,edges,thr), se=snapValue(ns+p.dur,edges,thr);
+    if(ss!=null){ ns=ss; guide=ss; } else if(se!=null){ ns=se-p.dur; guide=se; } else { ns=snap(ns); }
+    ns=Math.max(0,ns);
+    const delta=ns-p.start;
+    const dT=Math.round((e.clientY-drag.startY)/LANE_H);
+    for(const it of drag.items){
+      it.c.start=Math.max(0,it.start+delta);
+      it.c.track=Math.min(LANES-1,Math.max(0,it.track+dT));
+    }
+    showGuide(guide);
+  } else if(drag.mode==='trim-r'){
+    const it=drag.items[0]; const edges=snapEdges([it.c]);
+    let end=it.start+it.dur+dxMin; const se=snapValue(end,edges,thr);
+    if(se!=null){ end=se; showGuide(se); } else { end=snap(end); showGuide(null); }
+    it.c.dur=Math.max(MIN_DUR, end-it.start);
+  } else if(drag.mode==='trim-l'){
+    const it=drag.items[0]; const edges=snapEdges([it.c]);
+    let ns=it.start+dxMin; const ss=snapValue(ns,edges,thr);
+    if(ss!=null){ ns=ss; showGuide(ss); } else { ns=snap(ns); showGuide(null); }
+    ns=Math.min(it.start+it.dur-MIN_DUR, Math.max(0,ns));
+    it.c.dur=it.start+it.dur-ns; it.c.start=ns;
+  }
+  renderTimeline(); renderMonitor();
+}
+function onDragUp(){
+  window.removeEventListener('pointermove', onDragMove);
+  showGuide(null);
+  drag=null;
+  commit();
+}
+
+/* ---------- Bag → Timeline ---------- */
+let bagDrag=null;
+function startBagDrag(e,a){
+  e.preventDefault();
+  const ghost=document.createElement('div');
+  ghost.className='drag-ghost'; ghost.textContent=a.title; ghost.style.background=colorFor(a);
+  document.body.appendChild(ghost);
+  bagDrag={a,ghost}; moveGhost(e);
+  window.addEventListener('pointermove', onBagMove);
+  window.addEventListener('pointerup', onBagUp, {once:true});
+}
+function moveGhost(e){ bagDrag.ghost.style.left=(e.clientX+12)+'px'; bagDrag.ghost.style.top=(e.clientY+10)+'px'; }
+function onBagMove(e){
+  moveGhost(e);
+  const r=$('lanes').getBoundingClientRect();
+  const over=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;
+  $('canvas').classList.toggle('drop-ok', over);
+}
+function onBagUp(e){
+  window.removeEventListener('pointermove', onBagMove);
+  $('canvas').classList.remove('drop-ok');
+  const r=$('lanes').getBoundingClientRect(); const scroll=$('tlScroll');
+  if(e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom){
+    pushHistory();
+    const a=bagDrag.a;
+    const startMin=snap(xToMin(e.clientX - r.left + scroll.scrollLeft));
+    let track=Math.min(LANES-1,Math.max(0,Math.floor((e.clientY-r.top)/LANE_H)));
+    if(a.type==='clock') track=LANES-1;
+    const dur=a.type==='clock'?(a.segments*30):expectedDur(a);
+    const c=mkClip(a.id, startMin, dur, track, 'planned');
+    clips.push(c); selectOnly(c.id); commit();
+  }
+  bagDrag.ghost.remove(); bagDrag=null;
+}
+
+/* ---------- Playhead ---------- */
+function setPlayheadFromClientX(clientX){
+  const r=$('lanes').getBoundingClientRect(); const scroll=$('tlScroll');
+  playhead=snap(Math.max(0, xToMin(clientX - r.left + scroll.scrollLeft)));
+  renderPlayhead(); renderMonitor();
+}
+$('playhead').querySelector('.grip').addEventListener('pointerdown', e=>{
+  e.preventDefault(); e.stopPropagation();
+  const mv=ev=>setPlayheadFromClientX(ev.clientX);
+  window.addEventListener('pointermove', mv);
+  window.addEventListener('pointerup', ()=>{window.removeEventListener('pointermove', mv); save();}, {once:true});
+});
+$('ruler').addEventListener('pointerdown', e=>{ setPlayheadFromClientX(e.clientX); save(); });
+
+/* ---------- empty-space click / emergent clip ---------- */
+function isEmpty(t){ return t.id==='lanes'||t.classList.contains('lane')||t.classList.contains('lane-label'); }
+$('lanes').addEventListener('pointerdown', e=>{
+  if(isEmpty(e.target) && selected.size){ selected.clear(); commit(); }
+});
+$('lanes').addEventListener('dblclick', e=>{
+  if(!isEmpty(e.target)) return;
+  const r=$('lanes').getBoundingClientRect(); const scroll=$('tlScroll');
+  const startMin=snap(xToMin(e.clientX - r.left + scroll.scrollLeft));
+  let track=Math.min(LANES-2,Math.max(0,Math.floor((e.clientY-r.top)/LANE_H)));
+  const title=prompt('Emergent clip — what happened? (creates a 15-min clip + a Bag stub)');
+  if(!title) return;
+  pushHistory();
+  const id='stub_'+(stubSeq++);
+  registerAsset({id,type:'scene',title,purpose:'Emergent — flesh this stub out later',
+    durMin:15,durMax:15,conf:'loose',isStub:true,
+    summary:'Captured live as an emergent clip. Stub created in the Bag.',beats:[],npcs:[]});
+  const c=mkClip(id,startMin,15,track,'planned');
+  clips.push(c); selectOnly(c.id); commit();
+});
+
+/* ---------- group / ungroup / delete ---------- */
+function groupSelection(){
+  const cs=[...selected].map(id=>clips.find(c=>c.id===id)).filter(Boolean).filter(c=>c.sourceType==='scene');
+  if(cs.length<2) return;
+  pushHistory();
+  cs.sort((a,b)=>a.start-b.start);
+  const sceneIds=cs.map(c=>c.sourceId);
+  const dur=cs.reduce((s,c)=>s+c.dur,0);
+  const id='seqg_'+(groupSeq++);
+  registerAsset({id,type:'sequence',kind:'distributed',title:'New Sequence ('+cs.length+' scenes)',sceneIds,dur,_grouped:true,
+    summary:'Grouped from '+cs.length+' scene clips on the timeline.'});
+  const ids=new Set(cs.map(c=>c.id));
+  const start=cs[0].start, track=cs[0].track;
+  clips=clips.filter(c=>!ids.has(c.id));
+  const nc=mkClip(id,start,dur,track,'planned'); nc.collapsed=true;
+  clips.push(nc); selectOnly(nc.id); commit();
+}
+function ungroup(c){
+  const a=ASSETS[c.sourceId];
+  if(a.type!=='sequence') return;
+  const idx=clips.indexOf(c);
+  let start=c.start; const made=[];
+  for(const id of a.sceneIds){ const s=ASSETS[id]; const d=expectedDur(s); const nc=mkClip(id,start,d,c.track,c.status); made.push(nc); start+=d; }
+  clips.splice(idx,1,...made);
+  selected=new Set(made.map(x=>x.id));
+}
+function deleteSelected(){
+  if(!selected.size) return;
+  pushHistory();
+  clips=clips.filter(c=>!selected.has(c.id));
+  selected.clear(); commit();
+}
+
+/* ---------- clocks: advance / retract / fire ---------- */
+function stepClock(c, dir){
+  const a=ASSETS[c.sourceId];
+  const seg=a.segments||4;
+  const f=Math.max(0,Math.min(seg, c.filled||0));
+  const nf=Math.max(0,Math.min(seg, f+dir));
+  if(nf===f) return;
+  pushHistory();
+  if(dir>0){
+    for(const t of (a.thresholds||[])) if(t.at===nf) fireThreshold(c,a,t);
+  } else {
+    // retracting out of segment f un-does any fire recorded at that segment
+    fires=fires.filter(fr=>!(fr.clockClipId===c.id && fr.at===f));
+    if(pendingFire && pendingFire.clockClipId===c.id && pendingFire.at===f) pendingFire=null;
+  }
+  c.filled=nf;
+  commit();
+}
+function fireThreshold(c,a,t){
+  const fr={ id:'f'+(fireSeq++), clockClipId:c.id, clockId:a.id, clockTitle:a.title,
+    at:t.at, flavor:t.fires, sequenceId:t.sequenceId||null, note:t.note||null, atMin:playhead };
+  fires.push(fr);
+  if(t.fires==='run_beat') pendingFire=fr;   // surfaces a Monitor prompt
+}
+function jumpToFire(fr){
+  if(fr.sequenceId){
+    const clip=clips.find(c=>c.sourceId===fr.sequenceId);
+    if(clip){ selectOnly(clip.id); }
+  }
+  if(pendingFire && pendingFire.id===fr.id) pendingFire=null;
+  commit();
+}
+function doJump(){ if(pendingFire) jumpToFire(pendingFire); }
+function doDismiss(){ pendingFire=null; commit(); }
+function fireBanner(){
+  if(!pendingFire || pendingFire.flavor!=='run_beat') return '';
+  const fr=pendingFire;
+  const seq=ASSETS[fr.sequenceId];
+  const onTl=clips.some(c=>c.sourceId===fr.sequenceId);
+  return `<div class="fire-banner">⏱ <b>${fr.clockTitle}</b> fired (segment ${fr.at}) — run <b>${seq?seq.title:'the next beat'}</b> ${onTl?'next':'(drag it from the Bag)'}
+    <button class="mon-btn" id="btnJump" type="button">${onTl?'Jump to it':'OK'}</button>
+    <button class="mon-btn ghost" id="btnDismiss" type="button">Dismiss</button></div>`;
+}
+function wireFireBtns(){
+  const j=$('btnJump'); if(j) j.addEventListener('click', doJump);
+  const d=$('btnDismiss'); if(d) d.addEventListener('click', doDismiss);
+}
+
+/* ---------- Markdown recap (played + fires) ---------- */
+function exportRecap(){
+  const played=clips.filter(c=>!c.overlay && c.status==='played').sort((a,b)=>a.start-b.start);
+  const end=clips.filter(c=>!c.overlay).reduce((m,c)=>Math.max(m,c.start+c.dur),0);
+  const L=[];
+  L.push('# '+SESSION_TITLE+' — Recap');
+  L.push('');
+  L.push(`Target ${fmt(TARGET_MIN)} · ran to ${fmt(end)} · ${played.length} scene${played.length===1?'':'s'} played.`);
+  L.push('');
+  L.push('## Played, in order');
+  if(!played.length) L.push('_Nothing marked played yet — right-click a clip and "Mark as played" as you run it._');
+  played.forEach((c,i)=>{
+    const a=ASSETS[c.sourceId];
+    const extra=[];
+    if(a.isStub) extra.push('emergent');
+    if(a.type==='sequence') extra.push(a.sceneIds.map(id=>(ASSETS[id]||{}).title||id).join(' → '));
+    L.push(`${i+1}. **${c.label||a.title}** — ${c.dur}m${extra.length?' · '+extra.join(' · '):''}`);
+  });
+  L.push('');
+  L.push('## World pressure');
+  const clockClips=clips.filter(c=>c.overlay);
+  if(!clockClips.length) L.push('_No clocks on the timeline._');
+  clockClips.forEach(c=>{
+    const a=ASSETS[c.sourceId];
+    L.push(`- **${a.title}** — ${c.filled||0}/${a.segments} filled`);
+    fires.filter(f=>f.clockClipId===c.id).sort((x,y)=>x.atMin-y.atMin).forEach(fr=>{
+      if(fr.flavor==='run_beat'){ const s=ASSETS[fr.sequenceId]; L.push(`  - fired @ ${fmt(fr.atMin)}: run **${s?s.title:'beat'}**`); }
+      else L.push(`  - fired @ ${fmt(fr.atMin)}: world-state — ${fr.note||''}`);
+    });
+  });
+  const md=L.join('\n');
+  const blob=new Blob([md],{type:'text/markdown'});
+  const url=URL.createObjectURL(blob);
+  const an=document.createElement('a'); an.href=url; an.download='augur-recap.md';
+  document.body.appendChild(an); an.click(); an.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  return md;
+}
+
+/* ---------- context menu ---------- */
+let ctxEl=null;
+function closeCtx(){ if(ctxEl){ctxEl.remove(); ctxEl=null;} }
+function openCtx(e,c){
+  closeCtx();
+  const a=ASSETS[c.sourceId];
+  const isSeq=a.type==='sequence';
+  const isClock=a.type==='clock';
+  const nTh=(a.thresholds||[]).length;
+  const m=document.createElement('div'); m.className='ctx';
+  m.innerHTML=`<h5>${(c.label||a.title)}</h5>
+    <button data-act="rename">✎ Rename instance…</button>
+    <button data-act="dur">⏱ Set ${isClock?'span':'duration'}…</button>
+    ${isClock?'':`<button data-act="played">${c.status==='played'?'↺ Mark as not played':'✓ Mark as played'}</button>`}
+    ${isSeq?`<button data-act="collapse">${c.collapsed?'▾ Expand in place':'▸ Collapse'}</button>
+            <button data-act="ungroup">⤋ Ungroup into ${a.sceneIds.length} scenes</button>`:''}
+    ${isClock?`<div class="sep"></div>
+      <button data-act="segs">▦ Set segments… (now ${a.segments})</button>
+      <button data-act="th-run">＋ Add run-beat threshold…</button>
+      <button data-act="th-world">＋ Add world-state threshold…</button>
+      ${nTh?`<button data-act="th-clear">✕ Clear ${nTh} threshold${nTh>1?'s':''}</button>`:''}`:''}
+    <div class="sep"></div>
+    <button class="danger" data-act="remove">🗑 Remove clip (Bag asset stays safe)</button>`;
+  document.body.appendChild(m);
+  const r=m.getBoundingClientRect();
+  let x=e.clientX, y=e.clientY;
+  if(x+r.width  > window.innerWidth  - 8) x=window.innerWidth  - 8 - r.width;
+  if(y+r.height > window.innerHeight - 8) y=window.innerHeight - 8 - r.height;
+  m.style.left=Math.max(8,x)+'px'; m.style.top=Math.max(8,y)+'px';
+  ctxEl=m;
+  m.addEventListener('pointerdown', ev=>ev.stopPropagation());
+  m.querySelectorAll('button').forEach(b=>b.addEventListener('click', ()=>{
+    const act=b.dataset.act;
+    if(act==='collapse'){ c.collapsed=!c.collapsed; if(c.collapsed)c.focusSceneId=null; }
+    else if(act==='segs'){ const v=parseInt(prompt('Number of segments:', a.segments),10); if(v>0){ a.segments=v; if((c.filled||0)>v)c.filled=v; registerAsset(a); } }
+    else if(act==='th-run'){
+      const dlist=Object.values(ASSETS).filter(x=>x.type==='sequence' && x.kind==='distributed');
+      if(!dlist.length){ alert('No distributed sequences to link a run-beat to yet.'); }
+      else { const seg=parseInt(prompt('Fire at which segment? (1–'+a.segments+')', (c.filled||0)+1),10);
+        if(seg>0){ const choice=parseInt(prompt('Link which distributed sequence?\n'+dlist.map((s,i)=>(i+1)+') '+s.title).join('\n'),'1'),10)-1;
+          if(dlist[choice]){ a.thresholds=a.thresholds||[]; a.thresholds.push({at:seg,fires:'run_beat',sequenceId:dlist[choice].id}); registerAsset(a); } } } }
+    else if(act==='th-world'){
+      const seg=parseInt(prompt('Fire at which segment? (1–'+a.segments+')', (c.filled||0)+1),10);
+      if(seg>0){ const note=prompt('World-state change (what happens off-screen):'); if(note){ a.thresholds=a.thresholds||[]; a.thresholds.push({at:seg,fires:'world_state',note}); registerAsset(a); } } }
+    else if(act==='th-clear'){ a.thresholds=[]; registerAsset(a); }
+    else { pushHistory();
+      if(act==='rename'){ const v=prompt('Instance label:', c.label||a.title); if(v!==null) c.label=v||null; }
+      else if(act==='dur'){ const v=prompt('Display duration (minutes):', c.dur); const n=parseInt(v,10); if(n>0) c.dur=n; }
+      else if(act==='played'){ c.status = c.status==='played'?'planned':'played'; }
+      else if(act==='ungroup'){ ungroup(c); }
+      else if(act==='remove'){ clips=clips.filter(x=>x.id!==c.id); selected.delete(c.id); }
+    }
+    closeCtx(); commit();
+  }));
+}
+window.addEventListener('pointerdown', e=>{ if(ctxEl && !ctxEl.contains(e.target)) closeCtx(); });
+
+/* ---------- undo / redo / persistence ---------- */
+let undoStack=[], redoStack=[], storageOK=true;
+function serialize(){
+  return { clips:clips.map(c=>({...c})), lanes:LANES, playhead, tlHeight:curTlHeight(),
+    selected:[...selected], dynamicAssets:JSON.parse(JSON.stringify(dynamicAssets)),
+    fires:JSON.parse(JSON.stringify(fires)), vaultLoaded, target:TARGET_MIN,
+    vaultFiles: (vaultLoaded && VAULT) ? serializeVault(VAULT).filter(f=>f.isText).map(f=>({path:f.path,text:f.text})) : null,
+    counters:{clipSeq,groupSeq,stubSeq,fireSeq} };
+}
+function applyState(s){
+  clips=s.clips.map(c=>({...c}));
+  LANES=s.lanes; playhead=s.playhead;
+  selected=new Set(s.selected||[]);
+  vaultLoaded=!!s.vaultLoaded;
+  if(typeof s.target==='number') TARGET_MIN=s.target;
+  dynamicAssets=JSON.parse(JSON.stringify(s.dynamicAssets||{}));
+  if(vaultLoaded){ for(const k in ASSETS) delete ASSETS[k]; }   // a saved vault replaces the seed
+  Object.assign(ASSETS, dynamicAssets);
+  fires=JSON.parse(JSON.stringify(s.fires||[]));
+  pendingFire=null;
+  if(s.counters){ clipSeq=s.counters.clipSeq; groupSeq=s.counters.groupSeq; stubSeq=s.counters.stubSeq; fireSeq=s.counters.fireSeq||1; }
+  VAULT = (vaultLoaded && s.vaultFiles) ? buildVault(s.vaultFiles.map(f=>({path:f.path,name:f.path.split('/').pop(),text:f.text,isText:true}))) : null;
+  if(VAULT) redriveFromVault();   // ASSETS derive from the editable vault
+  document.documentElement.style.setProperty('--tl-h',(s.tlHeight||360)+'px');
+}
+function pushHistory(){ undoStack.push(serialize()); if(undoStack.length>80) undoStack.shift(); redoStack=[]; }
+function undo(){ if(!undoStack.length) return; redoStack.push(serialize()); applyState(undoStack.pop()); commit(); }
+function redo(){ if(!redoStack.length) return; undoStack.push(serialize()); applyState(redoStack.pop()); commit(); }
+function checkStorage(){ try{ localStorage.setItem('__t','1'); localStorage.removeItem('__t'); storageOK=true; }catch(e){ storageOK=false; } }
+let saveTimer=null;
+function save(){
+  if(!storageOK){ $('saveNote').textContent='session-only'; return; }
+  try{ localStorage.setItem(KEY, JSON.stringify(serialize()));
+    $('saveNote').textContent='saved ✓';
+    clearTimeout(saveTimer); saveTimer=setTimeout(()=>{ $('saveNote').textContent=''; },1200);
+  }catch(e){ storageOK=false; $('saveNote').textContent='session-only'; }
+}
+function load(){ try{ const raw=localStorage.getItem(KEY); if(!raw) return false; applyState(JSON.parse(raw)); return true; }catch(e){ return false; } }
+
+/* central commit: re-render everything and persist */
+function commit(){ renderBag(); renderTimeline(); renderMonitor(); updateButtons(); save(); }
+
+/* ---------- toolbar + keyboard ---------- */
+$('btnAddLane').addEventListener('click', ()=>{ pushHistory(); LANES++; commit(); $('tlScroll').scrollTop=$('tlScroll').scrollHeight; });
+$('btnUndo').addEventListener('click', undo);
+$('btnRedo').addEventListener('click', redo);
+$('btnReset').addEventListener('click', ()=>{ if(confirm('Clear saved state and reload the sample timeline?')){ try{localStorage.removeItem(KEY);}catch(e){} location.reload(); } });
+$('btnRecap').addEventListener('click', exportRecap);
+
+/* ---------- load a Markdown vault / .augur into the Bag ---------- */
+function rebuildSeedAssets(){
+  for(const k in ASSETS) delete ASSETS[k];
+  [SCENES,SEQUENCES,CLOCKS,ENDERS].forEach(o=>Object.values(o).forEach(a=>ASSETS[a.id]=a));
+  dynamicAssets={};
+}
+function loadSeed(){
+  rebuildSeedAssets(); VAULT=null;
+  lastAssetRecs=[]; vaultDirHandle=null;
+  vaultLoaded=false; TARGET_MIN=180;
+  clips=seedClips(); playhead=10; fires=[]; pendingFire=null;
+  selected.clear(); undoStack=[]; redoStack=[];
+  $('sessTitle').textContent='Welcome to Augur — a guided tour';
+  commit();
+  $('saveNote').textContent='tutorial loaded';
+}
+/* re-derive the Bag assets from the editable VAULT (call after any vault edit) */
+function redriveFromVault(){
+  const a=adaptVault(VAULT);
+  for(const k in ASSETS) delete ASSETS[k];
+  dynamicAssets={};
+  for(const id in a.assets){ ASSETS[id]=a.assets[id]; dynamicAssets[id]=a.assets[id]; }
+  return a;
+}
+function loadVaultRecs(recs){
+  const v=buildVault(recs);
+  if(v.issues.errors.length){
+    alert('Vault has '+v.issues.errors.length+' error(s) and was not loaded:\n\n'+v.issues.errors.slice(0,10).join('\n'));
+    return;
+  }
+  if(!v.byType.scene.length && !v.byType.sequence.length && !v.byType.clock.length){ alert('No scenes/sequences/clocks found in that vault.'); return; }
+  VAULT=v;
+  lastAssetRecs=(recs||[]).filter(r=>r && !r.isText && r.bytes);
+  vaultDirHandle=null;
+  const a=redriveFromVault();
+  vaultLoaded=true;
+  clips=a.clips; playhead=a.playhead; fires=a.fires; pendingFire=null;
+  if(typeof a.target==='number') TARGET_MIN=a.target;
+  selected.clear(); clipSeq=Math.max(clipSeq, a.clipSeqStart);
+  undoStack=[]; redoStack=[];
+  const w=v.issues.warnings.length;
+  const mt=(v.manifest&&v.manifest.title) || ((v.sessions[0]||{}).title) || 'Untitled vault';
+  $('sessTitle').textContent=mt;
+  commit();
+  $('saveNote').textContent = 'vault loaded'+(w?(' · '+w+' warning'+(w>1?'s':'')):'');
+}
+
+/* ---------- entity editing (stage 2) ---------- */
+function setSection(ent, name, content){
+  content=(content||'').replace(/\s+$/,'');
+  ent.sections=ent.sections||{}; if(content) ent.sections[name]=content; else delete ent.sections[name];
+  const lines=(ent.body||'').split('\n'); const out=[]; let i=0, replaced=false;
+  while(i<lines.length){
+    const m=lines[i].match(/^##\s+(.+?)\s*$/);
+    if(m && m[1].trim()===name){
+      if(content){ out.push('## '+name); out.push(content); }
+      i++; while(i<lines.length && !/^##\s+/.test(lines[i])) i++;
+      replaced=true; continue;
+    }
+    out.push(lines[i]); i++;
+  }
+  if(!replaced && content){ if(out.length && out[out.length-1].trim()!=='') out.push(''); out.push('## '+name); out.push(content); }
+  ent.body=out.join('\n').replace(/\n{3,}/g,'\n\n').trim();
+}
+const SECTION_FIELDS = {
+  scene:['Purpose','Read-aloud','Summary','Beats','Sensory','If they…','Notes'],
+  sequence:['Summary','Notes'], clock:['Summary','Notes'],
+  npc:['Description','Voice','Goals','Mood','Secrets','Notes'], location:['Description','Read-aloud','Notes'],
+  creature:['Statblock','Notes'], item:['Description','Notes'], trap:['Trigger','Effect','Notes'],
+  table:['Notes'], quest:['Notes'], campaign:['Overview','Notes'],
+};
+function edInput(label,key,val){ return `<label class="ed-f">${label}<input data-f="${key}" value="${_esc(val==null?'':val)}"></label>`; }
+function edNum(label,key,val){ return `<label class="ed-f">${label}<input type="number" data-f="${key}" value="${val==null?'':val}"></label>`; }
+function edSelect(label,key,opts,val){ return `<label class="ed-f">${label}<select data-f="${key}">${opts.map(o=>`<option value="${o}"${o===(val||'')?' selected':''}>${o||'—'}</option>`).join('')}</select></label>`; }
+const slug=s=>String(s||'').toLowerCase().replace(/['’]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+/* rebuild VAULT from its serialized form so relations re-resolve + re-validate after a structural edit */
+function rebuildVault(){
+  VAULT = buildVault(serializeVault(VAULT).filter(f=>f.isText).map(f=>({path:f.path,name:f.path.split('/').pop(),text:f.text,isText:true})));
+  redriveFromVault();
+}
+/* write the open form's scalar + section edits into the entity (no rebuild/commit) */
+function applyFormFields(ent){
+  const E=$('editor'); const get=k=>{ const el=E.querySelector('[data-f="'+k+'"]'); return el?el.value:undefined; };
+  const t=(get('__title')||'').trim(); if(t) ent.title=t;
+  if(ent.type==='scene'){
+    const mn=parseInt(get('__dmin'),10), mx=parseInt(get('__dmax'),10);
+    if(!isNaN(mn)&&!isNaN(mx)&&mn>0&&mx>=mn) ent.duration={min:mn,max:mx,confidence:get('__conf')||'loose'};
+    const enEl=E.querySelector('[data-f="__ender"]'); if(enEl){ if(enEl.checked) ent.ender=true; else delete ent.ender; }
+  }
+  if(ent.type==='clock'){ const s=parseInt(get('__segs'),10); if(s>0) ent.segments=s; ent.scope=get('__scope')||ent.scope; }
+  if(ent.type==='sequence'){ ent.kind=get('__kind')||ent.kind; }
+  E.querySelectorAll('[data-sec]').forEach(x=>setSection(ent, x.getAttribute('data-sec'), x.value));
+  const bodyEl=E.querySelector('[data-body]'); if(bodyEl) ent.body=bodyEl.value.trim();
+  ent.updated=new Date().toISOString();
+}
+/* a structural change (relation/create/delete): keep pending form edits, mutate, rebuild, re-open */
+function relAction(fn){
+  if(editEntity) applyFormFields(editEntity);
+  pushHistory();
+  fn();
+  const ref=editEntity?{type:editEntity.type,id:editEntity.id}:null;
+  rebuildVault();
+  editEntity = ref ? VAULT.byId.get(ref.type+'::'+ref.id) : null;
+  commit();
+  if(editEntity){ const el=$('edRels'); if(el){ el.innerHTML=relsBody(editEntity); wireRels(); } }   // refresh ONLY relations (no scroll jump)
+  else closeEditor();
+}
+function relsBody(ent){
+  const defs=(typeof REL!=='undefined' && REL[ent.type]) || [];
+  if(!defs.length) return '';
+  let html='<div class="ed-rels-h">Relations</div>';
+  for(const [field,target,single] of defs){
+    const v=ent[field]; const ids = single ? (v?[v]:[]) : (Array.isArray(v)?v:(v?[v]:[]));
+    const chips=ids.map(rid=>{ const t=VAULT.byId.get(target+'::'+rid);
+      return `<span class="rel-chip${t?'':' missing'}"><span class="rel-go" data-go="${target}::${rid}">${t?_esc(t.title):_esc(rid)+' (missing)'}</span><b class="rel-rm" data-field="${field}" data-single="${single}" data-rid="${_esc(rid)}">✕</b></span>`; }).join('');
+    const cand=(VAULT.byType[target]||[]).filter(c=>!ids.includes(c.id));
+    html+=`<div class="ed-rel"><span class="ed-rel-f">${field}</span><div class="rel-chips">${chips||'<span class="rel-none">none</span>'}</div>
+      <select class="ed-rel-add" data-field="${field}" data-target="${target}" data-single="${single}"><option value="">+ link ${target}…</option>${cand.map(c=>`<option value="${_esc(c.id)}">${_esc(c.title)}</option>`).join('')}</select>
+      <button class="ed-rel-new" data-field="${field}" data-target="${target}" data-single="${single}">＋ new</button></div>`;
+  }
+  return html;
+}
+function wireRels(){
+  const E=$('edRels'); if(!E) return;
+  E.querySelectorAll('.rel-rm').forEach(b=>b.onclick=()=>relAction(()=>removeRelation(editEntity, b.dataset.field, b.dataset.single==='true', b.dataset.rid)));
+  E.querySelectorAll('.rel-go').forEach(g=>g.onclick=()=>{ const [t,i]=g.dataset.go.split('::'); if(editEntity) applyFormFields(editEntity); if(VAULT.byId.get(t+'::'+i)) openEditor(t,i); });
+  E.querySelectorAll('.ed-rel-add').forEach(s=>s.onchange=()=>{ if(s.value) relAction(()=>addRelation(editEntity, s.dataset.field, s.dataset.single==='true', s.value)); });
+  E.querySelectorAll('.ed-rel-new').forEach(b=>b.onclick=()=>{
+    const target=b.dataset.target; const title=(prompt('New '+target+' title:')||'').trim(); if(!title) return;
+    const nid=slug(title); const scaffold = target==='creature' ? '## Statblock\n*Custom monster — fill in AC, HP, abilities, actions.*\n' : '';
+    relAction(()=>{ const r=createEntity(VAULT, target, nid, {title}, scaffold); if(r.error){ alert(r.error); } else addRelation(editEntity, b.dataset.field, b.dataset.single==='true', nid); });
+  });
+}
+/* Entity card: a read-friendly view of ANY scene-referenced entity (NPC, location, item, trap,
+   table, quest, creature…) for use at the table. Opened from clickable Monitor chips; relation
+   chips inside the card navigate to other cards. */
+const CARD_ICON={npc:'👤',location:'📍',item:'📦',trap:'⚠',table:'🎲',quest:'🎯',handout:'📄',creature:'👹',scene:'🎬',sequence:'🎞',clock:'⏱',campaign:'📖'};
+function openCard(type,id){
+  if(!VAULT) return;
+  const ent=VAULT.byId.get(type+'::'+id); if(!ent) return;
+  const S=ent.sections||{}; const R=ent._resolved||{};
+  const icon=CARD_ICON[type]||'•';
+  const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+  // header chips (type-specific scalars)
+  const extra=[];
+  if(type==='item'&&ent.rarity) extra.push(`<span class="chip">${_esc(ent.rarity)}</span>`);
+  if(type==='clock') extra.push(`<span class="chip">${ent.segments||4} segments</span>`);
+  if(type==='scene'&&ent.duration) extra.push(`<span class="chip">${ent.duration.min}–${ent.duration.max}m</span>`);
+  if(type==='sequence'&&ent.kind) extra.push(`<span class="chip">${_esc(ent.kind)}</span>`);
+  if(type==='creature'&&ent.cr!=null) extra.push(`<span class="chip">CR ${_esc(ent.cr)}</span>`);
+  // npc specials: mood + affiliations + GM secrets
+  const special=new Set(type==='npc'?['Mood','Secrets']:[]);
+  const moodTxt=(type==='npc')?(S['Mood']||ent.mood||''):'';
+  const mood=moodTxt?`<div class="npc-mood"><b>Mood:</b> ${mdInline(moodTxt)}</div>`:'';
+  const affil=Array.isArray(ent.affiliations)?ent.affiliations:(ent.affiliations?[String(ent.affiliations)]:[]);
+  const affilBlock=(type==='npc'&&affil.length)?`<div class="mon-block"><h4>Affiliations</h4><div class="pill-row">${affil.map(x=>`<span class="pill">${_esc(x)}</span>`).join('')}</div></div>`:'';
+  // recognized + extra body sections (rendered as prose; pipe tables render too)
+  const fields=(SECTION_FIELDS[type]||['Notes']);
+  const seen=new Set(); let secs='';
+  const emit=label=>{ if(special.has(label)||seen.has(label)||!S[label]) return; seen.add(label); secs+=`<div class="mon-block"><h4>${_esc(label)}</h4><div class="npc-prose">${mdLite(S[label])}</div></div>`; };
+  fields.forEach(emit); Object.keys(S).forEach(emit);
+  // relation chips → open the linked entity's card
+  let rels='';
+  for(const rel of (typeof REL!=='undefined'?(REL[type]||[]):[])){
+    const field=rel[0], target=rel[1]; const got=R[field]; const arr=Array.isArray(got)?got:(got?[got]:[]);
+    if(!arr.length) continue;
+    rels+=`<div class="mon-block"><h4>${cap(field)}</h4><div class="pill-row">${arr.map(o=>`<button class="pill ref" type="button" data-card="${target}::${_esc(o.id)}">${_esc(o.title)}</button>`).join('')}</div></div>`;
+  }
+  const secret=(type==='npc'&&S['Secrets'])?`<div class="mon-block npc-secret"><h4>🔒 Secrets — GM only</h4><div class="npc-prose">${mdLite(S['Secrets'])}</div></div>`:'';
+  const empty=!secs&&!rels&&!mood&&!affilBlock&&!secret;
+  $('editor').innerHTML=`<div class="ed-box npc-card">
+    <div class="ed-head">${icon} ${_esc(ent.title)} <span class="chip">${type}</span> ${extra.join(' ')}</div>
+    <div class="ed-body">${mood}${secs}${affilBlock}${rels}${secret}${empty?'<div class="ed-note">No details recorded yet — open Edit to add them.</div>':''}</div>
+    <div class="ed-foot"><span class="ed-note">Quick read view for the table.</span>
+      <button id="npcEdit">✎ Edit ${type}</button><button id="ncCancel" class="primary">Close</button></div></div>`;
+  $('editor').classList.add('show');
+  $('ncCancel').onclick=closeEditor;
+  $('npcEdit').onclick=()=>{ closeEditor(); openEditor(type, id); };
+  $('editor').onclick=ev=>{ if(ev.target===$('editor')) closeEditor(); };
+  $('editor').querySelectorAll('.pill.ref').forEach(b=>b.onclick=()=>{ const [t,i]=b.dataset.card.split('::'); openCard(t,i); });
+}
+/* Library: browse & open ANY entity (incl. orphans not on the timeline, like locations) for editing/rename. */
+function openLibrary(){
+  if(!VAULT) return;
+  const order=['scene','sequence','clock','npc','location','creature','item','trap','table','quest','handout','campaign'];
+  const refset=new Set(); // entities reachable via some relation (to flag true orphans)
+  for(const e of VAULT.all){ for(const [f,t] of (REL[e.type]||[])){ const v=e[f]; (Array.isArray(v)?v:(v?[v]:[])).forEach(id=>refset.add(t+'::'+id)); } }
+  let groups='';
+  for(const t of order){
+    const list=(VAULT.byType[t]||[]).slice().sort((a,b)=>String(a.title||a.id).localeCompare(String(b.title||b.id)));
+    if(!list.length) continue;
+    groups+=`<div class="lib-grp"><h4>${t} <span class="lib-n">${list.length}</span></h4><div class="lib-items">`+
+      list.map(e=>`<button class="lib-item" data-open="${t}::${_esc(e.id)}">${_esc(e.title||e.id)}<span class="lib-id">${_esc(e.id)}</span></button>`).join('')+
+      `</div></div>`;
+  }
+  $('editor').innerHTML=`<div class="ed-box"><div class="ed-head">📚 Library — every entity in the vault</div>
+    <div class="ed-body">${groups||'<div class="ed-note">Empty vault.</div>'}</div>
+    <div class="ed-foot"><span class="ed-note">Click any entity to open it — rename its id, relink, or delete.</span><button id="ncCancel">Close</button></div></div>`;
+  $('editor').classList.add('show'); $('ncCancel').onclick=closeEditor;
+  $('editor').onclick=ev=>{ if(ev.target===$('editor')) closeEditor(); };
+  $('editor').querySelectorAll('.lib-item').forEach(b=>b.onclick=()=>{ const [t,i]=b.dataset.open.split('::'); closeEditor(); openEditor(t,i); });
+}
+/* tolerant SRD lookup: accepts a slug, a slugifiable name, or a case-insensitive display name */
+function resolveSrd(s){ s=(s||'').trim(); if(!s||typeof SRD_BESTIARY==='undefined') return null;
+  if(SRD_BESTIARY[s]) return s; const sl=slug(s); if(SRD_BESTIARY[sl]) return sl;
+  return Object.keys(SRD_BESTIARY).find(k=>SRD_BESTIARY[k].name.toLowerCase()===s.toLowerCase())||null; }
+function issueRow(msg,cls){ const m=msg.match(/^(\w+) "([^"]+)"/); const o=(m&&VAULT&&VAULT.byId.get(m[1]+'::'+m[2]))?` data-open="${m[1]}::${m[2]}"`:''; return `<div class="issue ${cls}"${o}>${_esc(msg)}</div>`; }
+function openIssues(){
+  if(!VAULT) return; const e=VAULT.issues.errors, w=VAULT.issues.warnings;
+  $('editor').innerHTML=`<div class="ed-box"><div class="ed-head">⚠ Vault issues — ${e.length} error(s), ${w.length} warning(s)</div>
+    <div class="ed-body">${(e.length+w.length)?'':'<div class="ed-note">No issues — the vault is clean.</div>'}${e.map(m=>issueRow(m,'e')).join('')}${w.map(m=>issueRow(m,'w')).join('')}</div>
+    <div class="ed-foot"><span class="ed-note">Click an issue to open that entity and fix it (rename to match, or relink).</span><button id="ncCancel">Close</button></div></div>`;
+  $('editor').classList.add('show'); $('ncCancel').onclick=closeEditor;
+  $('editor').onclick=ev=>{ if(ev.target===$('editor')) closeEditor(); };
+  $('editor').querySelectorAll('[data-open]').forEach(r=>r.onclick=()=>{ const [t,i]=r.dataset.open.split('::'); closeEditor(); openEditor(t,i); });
+}
+function openEditor(type,id){
+  if(!VAULT) return;
+  const ent=VAULT.byId.get(type+'::'+id); if(!ent) return;
+  editEntity=ent;
+  let scalars=edInput('Title','__title', ent.title);
+  if(type==='scene'){ const d=ent.duration||{};
+    scalars+=`<div class="ed-row">${edNum('Duration min','__dmin',d.min)}${edNum('Duration max','__dmax',d.max)}${edSelect('Confidence','__conf',['tight','loose'],d.confidence)}<label class="ed-f ed-chk"><span>Session ender</span><span><input type="checkbox" data-f="__ender" ${ent.ender?'checked':''}> 🏁 can close a session</span></label></div>`; }
+  if(type==='clock'){ scalars+=`<div class="ed-row">${edNum('Segments','__segs',ent.segments)}${edSelect('Scope','__scope',['campaign','local'],ent.scope||'local')}</div>`; }
+  if(type==='sequence'){ scalars+=`<div class="ed-row">${edSelect('Kind','__kind',['tight','distributed'],ent.kind||'distributed')}</div>`; }
+  const clone = type==='creature' ? `<div class="ed-clone"><input list="srdList" id="edSrdPick" placeholder="Search SRD monster — e.g. Zombie"><button type="button" id="edClone">⎘ Clone into Statblock</button></div>` : '';
+  const list=SECTION_FIELDS[type]||['Notes'];
+  const extra=Object.keys(ent.sections||{}).filter(s=>!list.includes(s));
+  const secs=[...list,...extra];
+  let body = (type==='handout')
+    ? `<label class="ed-f">Body (player-facing text)<textarea data-body rows="6">${_esc(ent.body||'')}</textarea></label>`
+    : secs.map(s=>`<label class="ed-f">${s}<textarea data-sec="${_esc(s)}" rows="3">${_esc((ent.sections&&ent.sections[s])||'')}</textarea></label>`).join('');
+  $('editor').innerHTML=`<div class="ed-box">
+    <div class="ed-head">✎ Edit ${type} · <code>${_esc(ent.id)}</code></div>
+    <div class="ed-body">${scalars}${clone}${body}<div class="ed-rels" id="edRels">${relsBody(ent)}</div></div>
+    <div class="ed-foot"><button id="edRename">Rename id…</button><button id="edDelete" class="danger">Delete…</button>
+      <span class="ed-note">Edits auto-save in memory; export to write files.</span>
+      <button id="edCancel">Cancel</button><button id="edSave" class="primary">Save</button></div></div>`;
+  $('editor').classList.add('show');
+  $('edCancel').onclick=closeEditor; $('edSave').onclick=applyEditor;
+  $('edRename').onclick=doRename; $('edDelete').onclick=doDelete;
+  $('editor').onclick=ev=>{ if(ev.target===$('editor')) closeEditor(); };
+  if($('edClone')) $('edClone').onclick=()=>{   // fill the Statblock textarea from SRD; no rebuild → no scroll jump
+    const sid=resolveSrd($('edSrdPick').value); if(!sid){ alert('Not in the SRD bestiary: '+$('edSrdPick').value); return; }
+    const ta=$('editor').querySelector('[data-sec="Statblock"]'); if(ta) ta.value=srdToMarkdown(SRD_BESTIARY[sid]);
+    if(editEntity) delete editEntity.srd; $('saveNote').textContent='cloned — review & Save';
+  };
+  wireRels();
+}
+function applyEditor(){ const ent=editEntity; if(!ent){ closeEditor(); return; } pushHistory(); applyFormFields(ent); redriveFromVault(); commit(); closeEditor(); $('saveNote').textContent='edited ✓'; }
+function doRename(){
+  const ent=editEntity; if(!ent) return;
+  const ni=(prompt('Rename id (slug) — updates every reference:', ent.id)||'').trim();
+  if(!ni||ni===ent.id) return;
+  applyFormFields(ent); pushHistory();
+  const r=renameEntity(VAULT, ent.type, ent.id, ni); if(r.error){ alert(r.error); return; }
+  rebuildVault(); editEntity=VAULT.byId.get(ent.type+'::'+ni); commit();
+  if(editEntity) openEditor(ent.type, ni); else closeEditor();
+  $('saveNote').textContent='renamed ✓ ('+r.updated+' ref'+(r.updated===1?'':'s')+')';
+}
+function doDelete(){
+  const ent=editEntity; if(!ent) return;
+  const info=referrersOf(VAULT, ent.type, ent.id);
+  if(!confirm(`Delete ${ent.type} "${ent.id}"?`+(info.refs.length?` Unlinks ${info.refs.length} referrer(s).`:'')+(info.clips?` Removes ${info.clips} timeline clip(s).`:''))) return;
+  pushHistory(); deleteEntity(VAULT, ent.type, ent.id); rebuildVault(); commit(); closeEditor();
+  $('saveNote').textContent='deleted ✓';
+}
+function cloneSrd(){
+  const ent=editEntity; if(!ent||ent.type!=='creature') return;
+  const id=(prompt('Clone which SRD monster into an editable stat block? (slug)', ent.srd||'')||'').trim(); if(!id) return;
+  const m=(typeof SRD_BESTIARY!=='undefined') && SRD_BESTIARY[id];
+  if(!m){ alert('Not in the bundled SRD bestiary: '+id); return; }
+  applyFormFields(ent); pushHistory();
+  setSection(ent, 'Statblock', srdToMarkdown(m)); delete ent.srd;
+  rebuildVault(); editEntity=VAULT.byId.get('creature::'+ent.id); commit();
+  if(editEntity) openEditor('creature', ent.id);
+  $('saveNote').textContent='cloned SRD stats ✓';
+}
+function openCreate(){
+  if(!VAULT){ alert('Load a vault first — new entities are created into the loaded vault.'); return; }
+  const types=['scene','sequence','clock','npc','location','creature','item','trap','table','quest','handout'];
+  $('editor').innerHTML=`<div class="ed-box"><div class="ed-head">＋ New entity</div>
+    <div class="ed-body">${edSelect('Type','__ntype',types,'scene')}${edInput('Title','__ntitle','')}
+      <label class="ed-f">Clone SRD monster (creatures only — type to search, optional)<input list="srdList" data-f="__nsrd" value="" placeholder="e.g. Zombie"></label></div>
+    <div class="ed-foot"><span class="ed-note">Creates the entity and opens it for editing.</span>
+      <button id="ncCancel">Cancel</button><button id="ncCreate" class="primary">Create</button></div></div>`;
+  $('editor').classList.add('show');
+  $('ncCancel').onclick=closeEditor;
+  $('editor').onclick=ev=>{ if(ev.target===$('editor')) closeEditor(); };
+  $('ncCreate').onclick=()=>{
+    const E=$('editor'); const type=E.querySelector('[data-f="__ntype"]').value;
+    const title=(E.querySelector('[data-f="__ntitle"]').value||'').trim(); if(!title){ alert('Title required'); return; }
+    const id=slug(title); let body='';
+    if(type==='creature'){ const raw=(E.querySelector('[data-f="__nsrd"]').value||'').trim();
+      if(raw){ const sid=resolveSrd(raw); if(!sid){ alert('Not in SRD bestiary: '+raw); return; } body='## Statblock\n'+srdToMarkdown(SRD_BESTIARY[sid]); }
+      else body='## Statblock\n*Custom monster — fill in AC, HP, abilities, actions.*\n'; }
+    pushHistory(); const r=createEntity(VAULT, type, id, {title}, body); if(r.error){ alert(r.error); return; }
+    rebuildVault(); commit(); openEditor(type, id); $('saveNote').textContent='created ✓';
+  };
+}
+function closeEditor(){ editEntity=null; $('editor').classList.remove('show'); $('editor').innerHTML=''; $('editor').onclick=null; }
+
+async function recsFromFolder(fileList){
+  const recs=[];
+  for(const f of [...fileList]){
+    const rel=f.webkitRelativePath||f.name;
+    const isText=/\.(md|json)$/i.test(f.name);
+    let text='', bytes=null;
+    if(isText){ try{ text=await f.text(); }catch(_){ } }
+    else { try{ bytes=new Uint8Array(await f.arrayBuffer()); }catch(_){ } }
+    recs.push({ path:rel, name:f.name, text, bytes, isText });
+  }
+  return recs;
+}
+async function recsFromAugur(file){
+  let entries; try{ entries=await unzip(await file.arrayBuffer()); }
+  catch(err){ alert('Could not read .augur: '+err.message); return null; }
+  const td=new TextDecoder();
+  return entries.map(en=>{ const isText=/\.(md|json)$/i.test(en.name);
+    return { path:en.name, name:en.name.split('/').pop(), text:isText?td.decode(en.bytes):'', bytes:isText?null:en.bytes, isText }; });
+}
+/* ---------- Stage 4: Save / Export ---------- */
+/* Build a session JSON from the live timeline (inverse of vault-adapter's clip mapping). */
+function runtimeSession(){
+  const base=(VAULT.sessions&&VAULT.sessions[0])||{};
+  return {
+    id: base.id||'session',
+    title: $('sessTitle').textContent || (VAULT.manifest&&VAULT.manifest.title) || 'Session',
+    playheadMinutes: Math.round(playhead),
+    targetDurationMinutes: TARGET_MIN,
+    clips: clips.map(c=>{
+      const o={ id:c.id, sourceId:c.sourceId, sourceType:c.sourceType,
+        startMinutes:Math.round(c.start), displayDurationMinutes:Math.round(c.dur), trackIndex:c.track, status:c.status };
+      if(c.label) o.label=c.label;
+      if(c.overlay) o.isOverlay=true;
+      if(c.collapsed===false) o.collapsed=false;
+      if(c.filled!=null) o.filled=c.filled;
+      return o;
+    }),
+    fires: fires.map(f=>{ const o={ id:f.id, clockClipId:f.clockClipId, clockId:f.clockId, at:f.at, flavor:f.flavor, atMinutes:f.atMin };
+      if(f.sequenceId) o.sequence=f.sequenceId; if(f.note) o.note=f.note; return o; }),
+  };
+}
+/* Make sure every clip source has a real entity (synthesize for runtime-only groups/stubs). */
+function ensureClipEntities(){
+  for(const c of clips){
+    const t=c.sourceType||'scene';
+    if(VAULT.byId.get(t+'::'+c.sourceId)) continue;
+    const a=ASSETS[c.sourceId]; if(!a || !/^[a-z0-9][a-z0-9-]*$/.test(c.sourceId)) continue;
+    if(a.type==='sequence') createEntity(VAULT,'sequence',c.sourceId,{title:a.title||c.sourceId, kind:a.kind||'distributed', scenes:(a.sceneIds||[]).slice()}, a.summary?('## Summary\n'+a.summary):'');
+    else if(a.type==='clock') createEntity(VAULT,'clock',c.sourceId,{title:a.title||c.sourceId, segments:a.segments||4, scope:a.scope||'local'}, a.summary?('## Summary\n'+a.summary):'');
+    else createEntity(VAULT,'scene',c.sourceId,{title:a.title||c.sourceId, duration:{min:a.durMin||10,max:a.durMax||20,confidence:a.conf||'loose'}}, '');
+  }
+}
+function buildExportFiles(){
+  ensureClipEntities();
+  VAULT.sessions=[runtimeSession()];
+  return serializeVault(VAULT, lastAssetRecs);
+}
+function downloadBlob(blob, name){
+  const u=URL.createObjectURL(blob); const a=document.createElement('a');
+  a.href=u; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(u),1500);
+}
+async function exportAugur(){
+  if(!VAULT){ alert('Load a vault first.'); return; }
+  try{
+    const files=buildExportFiles();
+    const blob=await zip(files.map(f=>({ name:f.path, data:f.isText?f.text:f.bytes })));
+    const title=(VAULT.manifest&&VAULT.manifest.title) || $('sessTitle').textContent || 'vault';
+    downloadBlob(blob, slug(title)+'.augur');
+    redriveFromVault(); commit();      // synthesized entities + session are now part of the vault
+    $('saveNote').textContent='exported ✓';
+  }catch(e){ alert('Export failed: '+e.message); }
+}
+async function writeFileToDir(root, path, data){
+  const parts=path.split('/'); let dir=root;
+  for(let i=0;i<parts.length-1;i++) dir=await dir.getDirectoryHandle(parts[i], {create:true});
+  const fh=await dir.getFileHandle(parts[parts.length-1], {create:true});
+  const w=await fh.createWritable(); await w.write(data); await w.close();
+}
+async function saveToFolder(){
+  if(!VAULT){ alert('Load a vault first.'); return; }
+  if(!window.showDirectoryPicker){ alert('Saving in place needs a secure context (a packaged build or http://localhost). On file:// use “Save .augur” instead.'); return; }
+  try{
+    if(!vaultDirHandle) vaultDirHandle=await window.showDirectoryPicker({ id:'augur-vault', mode:'readwrite' });
+    const files=buildExportFiles();
+    for(const f of files) await writeFileToDir(vaultDirHandle, f.path, f.isText?f.text:f.bytes);
+    redriveFromVault(); commit();
+    $('saveNote').textContent='saved to folder ✓';
+  }catch(e){ if(e && e.name==='AbortError') return; alert('Save to folder failed: '+e.message); }
+}
+$('btnLoadVault').addEventListener('click', ()=>$('pickVault').click());
+$('btnOpenAugur').addEventListener('click', ()=>$('pickVaultAugur').click());
+$('btnExport').addEventListener('click', exportAugur);
+$('btnSaveFolder').addEventListener('click', saveToFolder);
+$('btnNew').addEventListener('click', openCreate);
+$('btnIssues').addEventListener('click', openIssues);
+$('btnLibrary').addEventListener('click', openLibrary);
+$('monitor').addEventListener('click', e=>{ const b=e.target.closest('.pill.ref'); if(b){ e.stopPropagation(); const [t,i]=b.dataset.card.split('::'); openCard(t,i); } });
+function fillSrdList(){ const dl=$('srdList'); if(dl && typeof SRD_BESTIARY!=='undefined') dl.innerHTML=Object.values(SRD_BESTIARY).map(m=>`<option value="${_esc(m.name)}"></option>`).join(''); }
+$('btnCloseVault').addEventListener('click', ()=>{ if(!vaultLoaded) return; if(confirm('Close the loaded vault and return to the built-in tutorial?')) loadSeed(); });
+$('pickVault').addEventListener('change', async e=>{
+  try{ const recs=await recsFromFolder(e.target.files); if(recs.length) loadVaultRecs(recs); }
+  catch(err){ alert('Vault load failed: '+err.message); }
+  finally{ e.target.value=''; }     // always reset so the same folder can be re-picked
+});
+$('pickVaultAugur').addEventListener('change', async e=>{
+  const f=e.target.files[0];
+  try{ if(f){ const recs=await recsFromAugur(f); if(recs) loadVaultRecs(recs); } }
+  catch(err){ alert('Vault load failed: '+err.message); }
+  finally{ e.target.value=''; }
+});
+
+$('tlResizer').addEventListener('pointerdown', e=>{
+  e.preventDefault();
+  const startY=e.clientY, startH=curTlHeight();
+  const mv=ev=>{ let h=startH+(startY-ev.clientY); h=Math.max(180, Math.min(window.innerHeight-180, h));
+    document.documentElement.style.setProperty('--tl-h', h+'px'); };
+  window.addEventListener('pointermove', mv);
+  window.addEventListener('pointerup', ()=>{ window.removeEventListener('pointermove', mv); save(); }, {once:true});
+});
+
+window.addEventListener('keydown', e=>{
+  const mod=e.metaKey||e.ctrlKey;
+  const editing = $('editor').classList.contains('show') || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
+  if(e.key==='Escape'){ if($('editor').classList.contains('show')){ closeEditor(); return; } closeCtx(); if(selected.size){ selected.clear(); commit(); } return; }
+  if(editing) return;   // don't run timeline shortcuts while typing in the editor
+  if(mod && (e.key==='z'||e.key==='Z')){ e.preventDefault(); if(e.shiftKey) redo(); else undo(); return; }
+  if(mod && (e.key==='y'||e.key==='Y')){ e.preventDefault(); redo(); return; }
+  if((e.key==='Delete'||e.key==='Backspace') && selected.size){ e.preventDefault(); deleteSelected(); return; }
+  if(mod && (e.key==='g'||e.key==='G') && selected.size>1){ e.preventDefault(); groupSelection(); return; }
+});
+
+/* Safety net: if any transparent element ever overlays a Monitor action button and
+   swallows the click, route the click to the button by geometry (capture phase, and
+   only when the click did NOT already land on the button so the normal handler runs). */
+document.addEventListener('click', e=>{
+  for(const [id,fn] of [['btnGroup',groupSelection],['btnDelSel',deleteSelected]]){
+    const b=document.getElementById(id);
+    if(!b || b===e.target || b.contains(e.target)) continue;
+    const r=b.getBoundingClientRect();
+    if(e.clientX>=r.left && e.clientX<=r.right && e.clientY>=r.top && e.clientY<=r.bottom){ fn(); return; }
+  }
+}, true);
+
+/* ---------- boot ---------- */
+(function boot(){
+  checkStorage();
+  load();                 // restore saved layout if present
+  fillSrdList();
+  renderBag(); renderTimeline(); renderMonitor(); updateButtons();
+})();
+</script>
+</body>
+</html>
