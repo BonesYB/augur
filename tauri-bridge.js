@@ -94,5 +94,15 @@
     note('saved to folder ✓');
   }
 
+  // Native "Save text as…" used by the app for recap exports (falls back to web download when absent).
+  window.augurSaveText = async (text, defaultName) => {
+    try {
+      const path = await save({ defaultPath: defaultName, filters: [{ name: 'Markdown', extensions: ['md'] }] });
+      if (!path) return;
+      await fs.writeTextFile(path, text);
+      note('saved ✓');
+    } catch (e) { if (e && e.name === 'AbortError') return; alert((e && e.message) || String(e)); }
+  };
+
   console.log('[Augur] Tauri bridge active — native Open/Save enabled.');
 })();

@@ -14,7 +14,7 @@ mkdirSync(dist, { recursive: true });
 // Sibling assets the app loads at runtime (+ the Tauri bridge).
 const assets = [
   'vault.js', 'augur-zip.js', 'vault-adapter.js', 'vault-serialize.js', 'vault-edit.js',
-  'srd-bestiary.js', 'AugurIcon.svg', 'AugurLogo.svg', 'tutorial.augur', 'tauri-bridge.js',
+  'srd-bestiary.js', 'AugurIcon.svg', 'AugurLogo.svg', 'toadwallow-bridge.augur', 'tauri-bridge.js',
 ];
 let copied = 0;
 for (const f of assets) {

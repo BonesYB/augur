@@ -23,6 +23,7 @@ function adaptScene(e){
     summary:S['Summary']||null, beats:_beats(S),
     sensory:S['Sensory']||null, ifThey:S['If they…']||S['If they...']||null,
     treasure:S['Treasure']||S['Loot']||null,
+    sections:S,   // full ordered section map (incl. custom) → generic read-view rendering
     npcs, creatures:(R.creatures||[]).map(adaptCreatureRef),
     locations:(R.locations||[]).map(_ref), items:(R.items||[]).map(_ref),
     traps:(R.traps||[]).map(_ref), tables:(R.tables||[]).map(_ref), quests:(R.quests||[]).map(_ref),
@@ -69,6 +70,7 @@ function adaptVault(vault){
         collapsed: (a&&a.type==='sequence') ? (c.collapsed!==false) : undefined,
         focusSceneId:null,
         filled: (a&&a.type==='clock') ? (c.filled||0) : undefined,
+        noteOutcome: c.outcome||undefined, noteGM: c.gmNotes||undefined,
       };
     });
     fires=(session.fires||[]).map(f=>({

@@ -19,8 +19,23 @@
     background:var(--bg); color:var(--ink);
     font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
     overflow:hidden; user-select:none;
+    display:flex; flex-direction:column; height:100vh;
   }
-  .app{display:grid; grid-template-columns:248px 1fr; grid-template-rows:1fr; height:100vh}
+  .app{display:grid; grid-template-columns:248px 1fr; grid-template-rows:1fr; flex:1; min-height:0}
+  /* ---- custom desktop menu bar ---- */
+  .menubar{flex:0 0 auto; display:flex; align-items:stretch; height:30px; background:var(--panel);
+    border-bottom:1px solid var(--line); font-size:12px; position:relative; z-index:50}
+  .menu-top{background:none; border:none; color:var(--ink-dim); padding:0 12px; cursor:pointer; font:inherit}
+  .menu-top:hover, .menu-top.open{background:var(--panel-2); color:var(--ink)}
+  .menu-pop{position:absolute; top:30px; background:var(--panel-2); border:1px solid var(--line);
+    border-radius:0 0 8px 8px; box-shadow:0 10px 30px rgba(0,0,0,.45); padding:5px; min-width:210px; z-index:51}
+  .menu-pop button{display:flex; justify-content:space-between; align-items:center; gap:18px; width:100%;
+    background:none; border:none; color:var(--ink); padding:6px 10px; border-radius:5px; font:inherit; text-align:left; cursor:pointer}
+  .menu-pop button:hover:not(:disabled){background:var(--accent); color:#0b0e12}
+  .menu-pop button:disabled{color:var(--ink-faint); cursor:default}
+  .menu-pop button .sc{font-size:11px; opacity:.7}
+  .menu-pop .menu-sep{height:1px; background:var(--line); margin:5px 6px}
+  #legacyBar{display:none}
 
   /* ---------- Bag ---------- */
   .bag{background:var(--panel); border-right:1px solid var(--line); display:flex; flex-direction:column; min-height:0}
@@ -64,6 +79,12 @@
   .mon-block h4{font-size:10.5px; text-transform:uppercase; letter-spacing:.8px; color:var(--ink-faint); margin:0 0 5px}
   .read-aloud{background:var(--panel); border-left:3px solid var(--accent); border-radius:0 6px 6px 0;
               padding:10px 14px; font-style:italic; color:#cdd6e2; max-width:760px}
+  .read-aloud.dialogue{border-left-color:var(--seq-tight); font-style:normal; color:#ddd6f4}
+  .read-aloud.dialogue .pill.ref{border-color:var(--seq-tight)}
+  .read-aloud .ra-h{font-style:normal; font-size:10.5px; text-transform:uppercase; letter-spacing:.8px;
+    color:var(--ink-faint); margin-bottom:5px}
+  .read-aloud .ra-h .pill.ref{text-transform:none; letter-spacing:0}
+  .read-aloud.dialogue .ra-h{color:var(--seq-tight)}
   .beats{margin:0; padding-left:18px; color:var(--ink-dim)} .beats li{margin:2px 0}
   .seq-scene{border-left:2px solid var(--seq-dist); padding-left:12px}
   .seq-head{color:var(--seq-dist) !important}
@@ -127,9 +148,9 @@
         box-shadow:0 2px 6px rgba(0,0,0,.35)}
   .clip:active{cursor:grabbing}
   .clip .c-title{font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-  .clip.seq .c-title{padding-left:15px}
+  .clip.seq .c-title{padding-left:20px}
   .clip .c-meta{font-size:10px; opacity:.82; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-  .clip.seq .c-meta{padding-left:15px}
+  .clip.seq .c-meta{padding-left:20px}
   .clip.sel{outline:2px solid #fff; outline-offset:1px; z-index:8}
   .clip .handle{position:absolute; top:0; bottom:0; width:14px; cursor:ew-resize; z-index:9;
                 display:flex; align-items:center; justify-content:center}
@@ -140,7 +161,8 @@
   .clip .handle:hover::before{background:#fff; height:74%; box-shadow:0 0 0 1px rgba(0,0,0,.3)}
   .clip.status-played{opacity:.5}
   .clip.status-played .c-title::after{content:' ✓'; opacity:.85}
-  .clip .caret{position:absolute; left:15px; top:5px; font-size:10px; cursor:pointer; opacity:.9; z-index:10}
+  .clip .caret{position:absolute; left:9px; top:1px; font-size:14px; line-height:1; padding:3px; cursor:pointer; opacity:.95; z-index:10}
+  .clip .caret:hover{opacity:1; color:#fff}
   .clip .segs{position:absolute; left:6px; right:6px; bottom:5px; top:25px; display:flex; gap:2px}
   .seg{flex:1; min-width:0; background:rgba(0,0,0,.18); border-radius:3px; font-size:9px; line-height:1.15;
        padding:3px 4px; overflow:hidden; cursor:pointer; color:#fff; white-space:nowrap; text-overflow:ellipsis}
@@ -252,9 +274,80 @@
   .npc-mood{font-size:12.5px; color:var(--ink); background:var(--panel-2); border-left:3px solid var(--accent); border-radius:0 5px 5px 0; padding:6px 10px; margin-bottom:10px}
   .npc-secret{background:rgba(224,161,60,.08); border:1px solid var(--warn); border-radius:8px; padding:4px 10px}
   .npc-secret h4{color:var(--warn)}
+  .rd-target{font:inherit; font-weight:700; color:var(--ink); background:none; border:none;
+    border-bottom:1px dashed var(--ink-faint); cursor:pointer; padding:0 1px}
+  .rd-target:hover{color:var(--accent); border-bottom-color:var(--accent)}
+  .peek-cue{display:flex; align-items:center; gap:8px; font-size:12px; color:#e8c184;
+    background:rgba(224,161,60,.10); border:1px solid var(--clock); border-radius:7px;
+    padding:6px 10px; margin-bottom:10px}
+  .peek-cue button{margin-left:auto; background:var(--clock); color:#0b0e12; border:none;
+    border-radius:5px; padding:3px 9px; font:inherit; font-weight:600; cursor:pointer}
+  .mon-edit{display:flex; flex-direction:column; gap:2px; margin-top:4px; max-width:760px}
+  .mon-edit .me-title{display:block; width:100%; font-size:20px; font-weight:700; color:var(--ink); background:none; border:none; outline:none; padding:2px 0}
+  .mon-edit .me-meta{font-size:12px; color:var(--ink-dim); margin:0 0 10px; display:flex; align-items:center; gap:6px; flex-wrap:wrap}
+  .mon-edit .me-num{width:46px; background:var(--panel-2); border:1px solid var(--line); border-radius:5px; color:var(--ink); padding:2px 5px; font:inherit; text-align:center}
+  .mon-edit .me-sel{background:var(--panel-2); border:1px solid var(--line); border-radius:5px; color:var(--ink); padding:2px 4px; font:inherit}
+  .mon-edit .me-chk{display:inline-flex; align-items:center; gap:4px}
+  .mon-edit .mon-block{margin-bottom:10px}
+  .mon-edit .me-area{display:block; width:100%; box-sizing:border-box; background:none; border:none; border-left:2px solid transparent;
+    color:var(--ink-dim); font:13px/1.5 inherit; padding:1px 0 1px 9px; margin-left:-11px; resize:none; overflow:hidden; outline:none; white-space:pre-wrap}
+  .mon-edit .me-area:hover{border-left-color:var(--line)}
+  .mon-edit .me-area:focus{border-left-color:var(--accent); background:rgba(91,157,255,.05)}
+  .mon-edit .me-area::placeholder{color:var(--ink-faint)}
+  .mon-edit .me-area.readaloud{background:var(--panel); border-left:3px solid var(--accent); border-radius:0 6px 6px 0; padding:8px 10px; margin-left:0; font-style:italic; color:var(--ink)}
+  .mon-edit #monRels{margin-top:6px}
+  .mon-edit .me-sec-h{display:flex; align-items:center; gap:8px}
+  .mon-edit .me-sec-h h4{margin:0}
+  .mon-edit .me-sec-tools{display:flex; gap:3px; opacity:0; transition:opacity .1s}
+  .mon-edit .me-sec:hover .me-sec-tools, .mon-edit .me-sec:focus-within .me-sec-tools{opacity:1}
+  .mon-edit .me-sec-btn{background:var(--panel-2); border:1px solid var(--line); color:var(--ink-dim);
+    border-radius:4px; min-width:20px; height:18px; font-size:11px; line-height:1; cursor:pointer; padding:0 4px}
+  .mon-edit .me-sec-btn:hover{border-color:var(--accent); color:var(--ink)}
+  .mon-edit .me-addsec{margin:10px 0 4px; background:none; border:1px dashed var(--line); color:var(--ink-dim);
+    border-radius:6px; padding:6px 10px; font:inherit; cursor:pointer}
+  .mon-edit .me-addsec:hover{border-color:var(--accent); color:var(--ink)}
+  .pill.ref-inline{display:inline; vertical-align:baseline; margin:0 1px; padding:1px 7px}
+  .ref-missing{color:var(--warn); border-bottom:1px dotted var(--warn)}
+  .ref-embed{border:1px solid var(--line); border-radius:8px; padding:8px 10px; margin:6px 0; background:var(--panel)}
+  .ref-embed.missing{color:var(--warn); border-color:var(--warn)}
+  .re-head{display:flex; align-items:center; gap:8px; margin-bottom:5px}
+  .re-type{font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint)}
+  .re-sec{font-size:12.5px; color:var(--ink-dim); line-height:1.5; margin:2px 0}
+  .re-sec b{color:var(--ink)}
+  .rp-mode{display:flex; gap:6px; margin-bottom:8px}
+  .rp-tog{flex:1; background:var(--panel-2); color:var(--ink-dim); border:1px solid var(--line); border-radius:6px; padding:6px; font:inherit; cursor:pointer}
+  .rp-tog.on{background:var(--accent); color:#0b0e12; border-color:var(--accent); font-weight:600}
+  #rpSearch{width:100%; box-sizing:border-box; background:var(--panel-2); border:1px solid var(--line); border-radius:6px; color:var(--ink); padding:7px 9px; font:inherit; margin-bottom:8px}
+  .rp-list{max-height:240px; overflow-y:auto; display:flex; flex-direction:column; gap:3px; margin-bottom:8px}
+  .rp-item{display:flex; justify-content:space-between; align-items:center; gap:8px; background:var(--panel-2); border:1px solid var(--line); border-radius:6px; padding:7px 9px; color:var(--ink); font:13px inherit; text-align:left; cursor:pointer}
+  .rp-item:hover{border-color:var(--accent)}
+  .rp-new{width:100%; background:none; border:1px dashed var(--line); border-radius:6px; color:var(--ink-dim); padding:7px; font:inherit; cursor:pointer}
+  .rp-new:hover{border-color:var(--accent); color:var(--ink)}
+  .notes-block{border-top:1px solid var(--line); padding-top:10px; margin-top:8px}
+  .note-area{display:block; width:100%; box-sizing:border-box; background:var(--panel-2); border:1px solid var(--line);
+    border-radius:6px; color:var(--ink); font:13px/1.5 inherit; padding:6px 9px; resize:none; overflow:hidden; outline:none; margin-top:3px}
+  .note-area:focus{border-color:var(--accent)}
+  .note-area::placeholder{color:var(--ink-faint)}
+  .rec-choose{display:flex; flex-direction:column; gap:8px; margin-top:10px}
+  .rec-btn{display:flex; flex-direction:column; gap:3px; align-items:flex-start; text-align:left; background:var(--panel-2);
+    border:1px solid var(--line); border-radius:8px; padding:10px 12px; color:var(--ink); font:inherit; cursor:pointer}
+  .rec-btn:hover{border-color:var(--accent)}
+  .rec-btn span{font-size:11.5px; color:var(--ink-dim)}
+  .dlg-msg{font-size:13px; line-height:1.5; color:var(--ink); white-space:pre-wrap}
+  .intro-grid{display:flex; flex-direction:column; gap:10px}
+  .intro-row{display:flex; gap:11px; align-items:flex-start; font-size:13px; line-height:1.45; color:var(--ink-dim)}
+  .intro-row b{color:var(--ink)}
+  .intro-i{flex:none; width:30px; height:30px; display:flex; align-items:center; justify-content:center;
+    font-size:16px; background:var(--panel-2); border:1px solid var(--line); border-radius:8px}
 </style>
 </head>
 <body>
+<div class="menubar" id="menubar">
+  <button class="menu-top" data-menu="File">File</button>
+  <button class="menu-top" data-menu="Edit">Edit</button>
+  <button class="menu-top" data-menu="View">View</button>
+  <button class="menu-top" data-menu="Help">Help</button>
+</div>
 <div class="app">
   <aside class="bag">
     <div class="bag-head">
@@ -270,25 +363,30 @@
       <div class="tl-resizer" id="tlResizer" title="Drag up or down to resize the timeline"></div>
       <div class="tl-bar">
         <span class="ttl" id="sessTitle">Welcome to Augur — a guided tour</span>
-        <button id="btnUndo" title="Undo (Ctrl/Cmd-Z)">↶ Undo</button>
-        <button id="btnRedo" title="Redo (Ctrl/Cmd-Shift-Z)">↷ Redo</button>
-        <button id="btnAddLane">+ Track</button>
-        <button id="btnLoadVault" title="Load a Markdown vault folder into the Bag">⤒ Load Vault</button>
-        <button id="btnOpenAugur" title="Open a .augur campaign file">⤒ .augur</button>
-        <button id="btnCloseVault" title="Unload the vault and return to the built-in tutorial" style="display:none">✕ Close Vault</button>
-        <button id="btnNew" title="Create a new entity in the loaded vault" style="display:none">＋ New</button>
-        <button id="btnLibrary" title="Browse & edit every entity in the vault (locations, NPCs, items…)" style="display:none">📚 Library</button>
-        <button id="btnIssues" title="Show vault validation issues (dangling references, etc.)" style="display:none">⚠</button>
-        <button id="btnExport" title="Download the current vault (entities + timeline) as a .augur file" style="display:none">⤓ Save .augur</button>
-        <button id="btnSaveFolder" title="Write changes straight back to a folder on disk (needs localhost / a packaged build)" style="display:none">💾 Save to folder</button>
-        <button id="btnRecap" title="Export a Markdown recap (played clips + clock fires)">⤓ Recap</button>
-        <button id="btnReset" title="Clear saved state and reload the sample">Reset</button>
+        <button id="btnAddLane" title="Tracks are stacked rows. Add a track for parallel or contingency content — an optional encounter, a branch the party might take, a backup scene — without committing to an order. The bottom track holds overlays like clocks.">+ Track</button>
         <span class="readout" id="readout"></span>
         <span class="saveNote" id="saveNote"></span>
-        <input type="file" id="pickVault" webkitdirectory directory multiple style="display:none" />
-        <input type="file" id="pickVaultAugur" accept=".augur,.zip" style="display:none" />
+        <!-- action buttons live here (hidden) so the menu bar + Tauri native-dialog bridge can trigger them by id -->
+        <div id="legacyBar">
+          <button id="btnUndo">Undo</button>
+          <button id="btnRedo">Redo</button>
+          <button id="btnNewVault">New Vault</button>
+          <button id="btnLoadSample">Sample</button>
+          <button id="btnLoadVault">Load Vault</button>
+          <button id="btnOpenAugur">.augur</button>
+          <button id="btnCloseVault" style="display:none">Close Vault</button>
+          <button id="btnNew" style="display:none">New</button>
+          <button id="btnLibrary" style="display:none">Library</button>
+          <button id="btnIssues" style="display:none">Issues</button>
+          <button id="btnExport" style="display:none">Save .augur</button>
+          <button id="btnSaveFolder" style="display:none">Save to folder</button>
+          <button id="btnRecap">Recap</button>
+          <button id="btnReset">Reset</button>
+          <input type="file" id="pickVault" webkitdirectory directory multiple style="display:none" />
+          <input type="file" id="pickVaultAugur" accept=".augur,.zip" style="display:none" />
+        </div>
       </div>
-      <div class="tl-hint">Drag from the Bag · trim edges (snaps to neighbors) · Ctrl/Cmd-click to multi-select then group · ▸ expands a sequence · double-click empty space = emergent clip · right-click a clip</div>
+      <div class="tl-hint">Drag from the Bag · trim edges (snaps to neighbors) · stack tracks for parallel / contingency beats · Ctrl/Cmd-click to multi-select then group · ▸ expands a sequence · double-click empty space = emergent clip · right-click a clip</div>
       <div class="tl-scroll" id="tlScroll">
         <div class="tl-canvas" id="canvas">
           <div class="ruler" id="ruler"></div>
@@ -307,6 +405,7 @@
 </div>
 
 <div class="editor" id="editor"></div>
+<div class="editor" id="dialog" style="z-index:1200"></div>
 <datalist id="srdList"></datalist>
 <script src="vault.js"></script>
 <script src="augur-zip.js"></script>
@@ -349,10 +448,10 @@ const SCENES = {
     readAloud:'Boxed “read-aloud” text appears in a panel like this — formatted and ready to read straight to your players.',
     beats:['Selection beats the playhead for what’s shown','Everything to run the moment lives here','In a loaded vault, click any reference chip — NPC, location, item, trap, table, quest — to open its card; cards link to each other','With a real vault loaded, an ✎ Edit button appears to change it inline'],
     npcs:['Example NPC: the Innkeeper','Example NPC: a nervous courier'] },
-  t_timeline: { id:'t_timeline', type:'scene', title:'4 · The Timeline (bottom)', purpose:'Sequence the session — order, length, and layering.',
+  t_timeline: { id:'t_timeline', type:'scene', title:'4 · The Timeline & tracks', purpose:'Sequence the session — order, length, and contingencies.',
     durMin:15, durMax:25, conf:'loose',
-    summary:'The timeline runs your session left-to-right. Drag a block to reorder it. Drag its left or right edge to change how long you expect it to run. Stack blocks on separate tracks (rows) when things can happen in parallel or you’re unsure of the order. Up top, a readout compares your total planned time against your target length, with a dashed target line on the canvas.',
-    beats:['Drag a block to move it; drag an edge to resize it','Stack on tracks for parallel or uncertain beats','Watch the Σ total vs. the dashed target line'],
+    summary:'The timeline runs your session left-to-right. Drag a block to reorder it; drag its left or right edge to change how long you expect it to run. Blocks on the same track *push each other* rather than overlapping, so the order stays honest.\n\n**Tracks are the stacked rows, and they’re how you plan for "maybe."** Track 1 is your through-line — the beats you expect to hit, in order. Add another track (the ＋ Track button) for *parallel or contingency* content: an optional encounter, a branch the party might take, a backup scene you may never run. A higher track doesn’t mean "later" — it means "off to the side, ready if needed." The bottom track is reserved for overlays like clocks, which span the whole session as ambient pressure. Up top, a readout compares your total planned time against your target, with a dashed target line on the canvas.',
+    beats:['Drag a block to move it; drag an edge to resize it','Same-track blocks push each other — they never overlap','Track 1 = your through-line, in order','Add a track (＋ Track) for contingencies: optional, branching, or backup beats','Overlays like clocks ride the bottom track','Watch the Σ total vs. the dashed target line'],
     npcs:[] },
   t_playhead: { id:'t_playhead', type:'scene', title:'5 · The Playhead & statuses', purpose:'Track where you are and what’s already been played.',
     durMin:15, durMax:25, conf:'tight',
@@ -411,7 +510,7 @@ let fires = [];                         // clock fires that have occurred
 let pendingFire = null;                 // most recent run-beat fire awaiting GM action
 let vaultLoaded = false;                // true once a Markdown vault replaces the seed
 let VAULT = null;                       // full parsed vault — the editable source of truth in vault mode
-let editEntity = null, monEditRef = null;
+let editEntity = null, monEditRef = null, monEdit = false;
 let lastAssetRecs = [];                 // binary asset recs from the loaded vault (carried through on export)
 let vaultDirHandle = null;              // File System Access handle for in-place "Save to folder"
 
@@ -456,7 +555,7 @@ function colorFor(a){
   if(a.ender) return getCss('--ender');
   return getCss('--scene');
 }
-function expectedDur(a){ return a.dur!=null ? a.dur : Math.round((a.durMin+a.durMax)/2); }
+function expectedDur(a){ const d = a.dur!=null ? a.dur : Math.round((a.durMin+a.durMax)/2); return (Number.isFinite(d) && d>0) ? d : 30; }
 function totalMinutes(){
   const end = clips.reduce((mx,c)=>Math.max(mx, c.start+c.dur), 0);
   return Math.max(TARGET_MIN+60, end+60);
@@ -485,6 +584,7 @@ function renderBag(){
       el.innerHTML = `<span class="swatch" style="background:${colorFor(a)}"></span>
         <div class="meta"><div class="name">${a.title}</div><div class="sub">${sub}</div></div>
         <span class="tag">${tag}</span>`;
+      el.title='Drag onto the timeline · right-click to edit or delete';
       el.addEventListener('pointerdown', e=>startBagDrag(e, a));
       g.appendChild(el);
     }
@@ -508,7 +608,11 @@ function renderTimeline(){
   lanes.style.height=(LANES*LANE_H)+'px';
   for(let i=0;i<LANES;i++){
     const l=document.createElement('div'); l.className='lane'; l.style.top=(i*LANE_H)+'px';
-    l.innerHTML=`<span class="lane-label">${i===LANES-1?'overlays':'track '+(i+1)}</span>`;
+    const isOv=i===LANES-1;
+    const lt=isOv ? 'Overlay track — clocks and session-spanning pressure live here, above the content.'
+      : (i===0 ? 'Track 1 — your main through-line: the beats you expect to hit, in order.'
+               : 'Track '+(i+1)+' — parallel or contingency content: optional, branching, or backup beats you might not run. Higher isn’t “later.”');
+    l.innerHTML=`<span class="lane-label" title="${lt}">${isOv?'overlays':'track '+(i+1)}</span>`;
     l.dataset.lane=i; lanes.appendChild(l);
   }
   $('target').style.left=minToX(TARGET_MIN)+'px';
@@ -580,6 +684,10 @@ function renderClip(c){
   el.innerHTML=inner;
   el.addEventListener('pointerdown', e=>onClipPointerDown(e,c));
   el.addEventListener('contextmenu', e=>{e.preventDefault(); openCtx(e,c);});
+  el.addEventListener('dblclick', e=>{   // "I'm here now": move the playhead to this clip + select it
+    if(e.target.classList.contains('caret')||e.target.classList.contains('handle')||e.target.classList.contains('clk-plus')||e.target.classList.contains('clk-minus')||e.target.closest('.seg')) return;
+    e.stopPropagation(); playhead=c.start; selectOnly(c.id); commit();
+  });
   return el;
 }
 
@@ -592,7 +700,30 @@ function updateReadout(){
   const d=end-TARGET_MIN;
   const cls=d>0?'over':(d<0?'under':'on');
   const delta=d===0?'on target':(d>0?'+'+fmt(d)+' over':fmt(d)+' under');
-  $('readout').innerHTML=`Σ <b>${fmt(sum)}</b> stacked · ends <b>${fmt(end)}</b> · target <b>${fmt(TARGET_MIN)}</b> <span class="${cls}">(${delta})</span> · ${content.length} clips`;
+  $('readout').innerHTML=`Σ <b>${fmt(sum)}</b> stacked · ends <b>${fmt(end)}</b> · target <button class="rd-target" id="setTarget" type="button" title="Click to set your session length">${fmt(TARGET_MIN)}</button> <span class="${cls}">(${delta})</span> · ${content.length} clips`;
+  const st=$('setTarget'); if(st) st.onclick=editTarget;
+}
+function editTarget(){
+  const h=Math.floor(TARGET_MIN/60), m=TARGET_MIN%60;
+  $('editor').innerHTML=`<div class="ed-box" style="max-width:330px">
+    <div class="ed-head">Session Target Length</div>
+    <div class="ed-body"><div class="ed-row">
+        <label class="ed-f">Hours<input type="number" id="tgtH" min="0" max="24" value="${h}"></label>
+        <label class="ed-f">Minutes<input type="number" id="tgtM" min="0" max="59" value="${m}"></label>
+      </div><div class="ed-note">How long you expect tonight's session to run.</div></div>
+    <div class="ed-foot"><button id="tgtCancel">Cancel</button><button id="tgtOk" class="primary">Set</button></div></div>`;
+  $('editor').classList.add('show');
+  $('editor').onclick=ev=>{ if(ev.target===$('editor')) closeEditor(); };
+  $('tgtCancel').onclick=closeEditor;
+  const apply=()=>{
+    const hh=Math.max(0,parseInt($('tgtH').value,10)||0), mm=Math.max(0,Math.min(59,parseInt($('tgtM').value,10)||0));
+    const total=hh*60+mm;
+    if(total<=0){ $('tgtH').focus(); return; }
+    pushHistory(); TARGET_MIN=total; closeEditor(); commit();
+  };
+  $('tgtOk').onclick=apply;
+  $('editor').querySelectorAll('#tgtH,#tgtM').forEach(i=>i.addEventListener('keydown',e=>{ if(e.key==='Enter') apply(); }));
+  $('tgtH').focus(); $('tgtH').select();
 }
 
 function updateButtons(){
@@ -663,7 +794,7 @@ function renderMonitor(){
       body=`<div class="mon-block seq-scene"><h4 class="seq-head">Focused scene in "${a.title}" — ${s.title}</h4>${sceneInner(s)}</div>
         <div class="src-note">Click another segment on the clip to focus it, or collapse the clip to see the whole sequence.</div>`;
     } else {
-      body=`${a.summary?`<div class="mon-block"><h4>Sequence · ${a.kind}</h4>${a.summary}</div>`:''}
+      body=`${a.summary?`<div class="mon-block"><h4>Sequence · ${a.kind}</h4>${renderProse(a.summary)}</div>`:''}
         <div class="mon-block"><h4>${a.sceneIds.length} scenes run together · expand the clip (▸) or right-click to ungroup</h4></div>
         ${a.sceneIds.map((id,i)=>{const s=ASSETS[id]; return `<div class="mon-block seq-scene">
           <h4 class="seq-head">Scene ${i+1} of ${a.sceneIds.length} — ${s.title}</h4>${sceneInner(s)}</div>`;}).join('')}`;
@@ -678,17 +809,111 @@ function renderMonitor(){
     : '';
 
   monEditRef = (isSeq && c.focusSceneId && a.sceneIds.includes(c.focusSceneId)) ? {type:'scene', id:c.focusSceneId} : {type:a.type, id:c.sourceId};
-  mon.innerHTML=fireBanner()+`
+
+  // ---- inline edit mode: render the editor into the Monitor ----
+  const editEnt = (monEdit && vaultLoaded && VAULT) ? VAULT.byId.get(monEditRef.type+'::'+monEditRef.id) : null;
+  if(editEnt){
+    mon.innerHTML=fireBanner()+`
+      <div class="mon-src">✎ editing ${editEnt.type} · <code>${_esc(editEnt.id)}</code></div>
+      <div class="mon-row"><button class="mon-btn primary" id="btnDoneEdit" type="button">✓ Done</button>
+        <button class="mon-btn" id="btnRenameInline" type="button">Rename id…</button>
+        <button class="mon-btn ghost danger" id="btnDeleteInline" type="button">🗑 Delete…</button>
+        <span class="ed-note">Changes save automatically.</span></div>
+      ${monEditorHtml(editEnt)}`;
+    wireFireBtns();
+    $('btnDoneEdit').onclick=()=>{ monEdit=false; renderMonitor(); };
+    $('btnRenameInline').onclick=()=>renameInline(editEnt.type, editEnt.id);
+    $('btnDeleteInline').onclick=()=>confirmDelete(editEnt.type, editEnt.id, editEnt.title);
+    wireMonEditor(editEnt);
+    return;
+  }
+
+  const peeking = sel.via==='selection' && !(playhead>=c.start && playhead<c.start+c.dur);
+  const peekBanner = peeking ? `<div class="peek-cue">👁 Peeking — the playhead is holding your spot at ${fmt(playhead)}.<button id="backToPlayhead" type="button">↵ Back to where you are</button></div>` : '';
+  const notesBlock = vaultLoaded ? `<div class="mon-block notes-block"><h4>📝 Session notes — what happened</h4>
+      <textarea class="note-area" data-note="outcome" rows="1" placeholder="What the players did / how it went — appears in the player recap.">${_esc(c.noteOutcome||'')}</textarea>
+      <h4 style="margin-top:9px">GM notes <span style="color:var(--ink-faint);text-transform:none;letter-spacing:0">· private, GM recap only</span></h4>
+      <textarea class="note-area" data-note="gm" rows="1" placeholder="Threads to follow up, reminders for next time…">${_esc(c.noteGM||'')}</textarea></div>` : '';
+  mon.innerHTML=fireBanner()+peekBanner+`
     <div class="mon-src">${a.type}${a.kind?' · '+a.kind:''} · shown via ${sel.via}</div>
     <div class="mon-title">${title}</div>
     <div class="mon-row"><span class="chip">${statusLabel(c.status)}</span>${durChip}${enderChip}${vaultLoaded?`<button class="mon-btn" id="btnEditEntity" type="button" style="padding:3px 10px">✎ Edit ${monEditRef.type}</button>`:''}</div>
     ${body}
     ${pressure}
-    ${worldHtml}`;
+    ${worldHtml}
+    ${notesBlock}`;
   wireFireBtns();
-  const eb=$('btnEditEntity'); if(eb) eb.onclick=()=>openEditor(monEditRef.type, monEditRef.id);
+  const eb=$('btnEditEntity'); if(eb) eb.onclick=()=>{ monEdit=true; renderMonitor(); };
+  const bp=$('backToPlayhead'); if(bp) bp.onclick=()=>{ selected.clear(); commit(); };
+  $('monitor').querySelectorAll('textarea.note-area').forEach(ta=>{ autoGrow(ta);
+    ta.addEventListener('input', ()=>autoGrow(ta));
+    ta.addEventListener('change', ()=>{ if(ta.dataset.note==='outcome') c.noteOutcome=ta.value||undefined; else c.noteGM=ta.value||undefined; save(); }); });
 }
 function _esc(s){ return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+/* ---------- themed in-app dialogs (replace native prompt/confirm/alert) ---------- */
+let _dlgEsc=null;   // how the topmost #dialog dismisses on Escape (set per-dialog)
+function _dlgClose(){ const d=$('dialog'); d.classList.remove('show'); d.innerHTML=''; d.onclick=null; _dlgEsc=null; }
+function uiPrompt({title, label, value='', placeholder='', ok='OK'}={}){
+  return new Promise(resolve=>{
+    $('dialog').innerHTML=`<div class="ed-box" style="max-width:400px"><div class="ed-head">${_esc(title||'')}</div>
+      <div class="ed-body"><label class="ed-f">${_esc(label||'')}<input id="uiInput" value="${_esc(value)}" placeholder="${_esc(placeholder)}" autocomplete="off"></label></div>
+      <div class="ed-foot"><button id="uiCancel">Cancel</button><button id="uiOk" class="primary">${_esc(ok)}</button></div></div>`;
+    $('dialog').classList.add('show');
+    const done=v=>{ _dlgClose(); resolve(v); };
+    _dlgEsc=()=>done(null);
+    $('uiCancel').onclick=()=>done(null);
+    $('dialog').onclick=ev=>{ if(ev.target===$('dialog')) done(null); };
+    const go=()=>done($('uiInput').value);
+    $('uiOk').onclick=go;
+    $('uiInput').addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault(); go();} else if(e.key==='Escape'){e.preventDefault(); done(null);} });
+    $('uiInput').focus(); $('uiInput').select();
+  });
+}
+function uiConfirm(title, message, ok='OK'){
+  return new Promise(resolve=>{
+    $('dialog').innerHTML=`<div class="ed-box" style="max-width:400px"><div class="ed-head">${_esc(title||'')}</div>
+      <div class="ed-body"><div class="dlg-msg">${_esc(message||'')}</div></div>
+      <div class="ed-foot"><button id="uiCancel">Cancel</button><button id="uiOk" class="primary">${_esc(ok)}</button></div></div>`;
+    $('dialog').classList.add('show');
+    const done=v=>{ _dlgClose(); resolve(v); };
+    _dlgEsc=()=>done(false);
+    $('uiCancel').onclick=()=>done(false);
+    $('uiOk').onclick=()=>done(true);
+    $('dialog').onclick=ev=>{ if(ev.target===$('dialog')) done(false); };
+  });
+}
+function uiAlert(message, title='Augur'){
+  return new Promise(resolve=>{
+    $('dialog').innerHTML=`<div class="ed-box" style="max-width:440px"><div class="ed-head">${_esc(title)}</div>
+      <div class="ed-body"><div class="dlg-msg">${_esc(message||'')}</div></div>
+      <div class="ed-foot"><button id="uiOk" class="primary">OK</button></div></div>`;
+    $('dialog').classList.add('show');
+    const done=()=>{ _dlgClose(); resolve(); };
+    _dlgEsc=done;
+    $('uiOk').onclick=done;
+    $('dialog').onclick=ev=>{ if(ev.target===$('dialog')) done(); };
+  });
+}
+/* ---------- first-run onboarding: what Augur is / why a timeline ---------- */
+function showIntro(){
+  $('dialog').innerHTML=`<div class="ed-box" style="max-width:560px">
+    <div class="ed-head" style="display:flex;align-items:center;gap:10px"><img src="AugurIcon.svg" alt="" style="height:22px;width:auto"> Welcome to Augur</div>
+    <div class="ed-body">
+      <div class="dlg-msg" style="margin-bottom:13px">Augur is a session planner for tabletop RPGs, built like a <b>video editor</b>. Your prep stops being a static document you scroll — it becomes a timeline you run.</div>
+      <div class="intro-grid">
+        <div class="intro-row"><span class="intro-i">🎒</span><div><b>The Bag</b> (left) — your prep shelf: scenes, NPCs, clocks, anything you might reach for tonight.</div></div>
+        <div class="intro-row"><span class="intro-i">🎞️</span><div><b>The Timeline</b> (bottom) — lay those pieces in order and see at a glance whether you’ve planned too much or too little for your target length.</div></div>
+        <div class="intro-row"><span class="intro-i">🖥️</span><div><b>The Monitor</b> (center) — shows the one thing you need right now: whatever sits under the playhead.</div></div>
+      </div>
+      <div class="dlg-msg" style="margin-top:13px">As the table goes off-script, slide the playhead, drag blocks around, and <b>cut the session as it happens</b>. Everything runs locally and offline — your material lives in a vault you load, edit, and save.</div>
+    </div>
+    <div class="ed-foot"><span class="ed-note">The timeline below is a built-in tour — work left → right through the lessons.</span><button id="introGo" class="primary">Start exploring →</button></div></div>`;
+  $('dialog').classList.add('show');
+  const done=()=>{ _dlgClose(); try{ localStorage.setItem('augur-intro-seen','1'); }catch(e){} };
+  _dlgEsc=done;
+  $('introGo').onclick=done;
+  $('dialog').onclick=ev=>{ if(ev.target===$('dialog')) done(); };
+}
 function mdInline(s){ return _esc(s)
   .replace(/\*\*\*([^*]+)\*\*\*/g,'<strong><em>$1</em></strong>')
   .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
@@ -747,16 +972,101 @@ function refPills(label, type, arr){
       return id?`<button class="pill ref" type="button" data-card="${type}::${_esc(id)}" title="Open ${type} details">${_esc(t)}</button>`:`<span class="pill">${_esc(t)}</span>`;
     }).join('')}</div></div>`;
 }
+/* ---------- inline references: [[id]] link chips + ![[id]] embeds ---------- */
+const REF_TYPE_ORDER=['creature','npc','location','item','trap','table','quest','scene','sequence','clock','handout'];
+function resolveRef(ref){
+  if(!VAULT) return null;
+  ref=String(ref||'').trim().replace('::',':');
+  if(ref.includes(':')){ const i=ref.indexOf(':'); const t=ref.slice(0,i).trim(), id=ref.slice(i+1).trim(); const e=VAULT.byId.get(t+'::'+id); return e?{type:t,id,ent:e}:null; }
+  for(const t of REF_TYPE_ORDER){ const e=VAULT.byId.get(t+'::'+ref); if(e) return {type:t,id:ref,ent:e}; }
+  return null;
+}
+function refChipHtml(ref){
+  const r=resolveRef(ref);
+  if(!r) return `<span class="ref-missing">[[${_esc(ref)}]]</span>`;
+  return `<button class="pill ref ref-inline" type="button" data-card="${r.type}::${_esc(r.id)}">${_esc(r.ent.title||r.id)}</button>`;
+}
+function refEmbedHtml(ref){
+  const r=resolveRef(ref);
+  if(!r) return `<div class="ref-embed missing">![[${_esc(ref)}]] — not found</div>`;
+  const ent=r.ent, S=ent.sections||{};
+  const icon=(typeof CARD_ICON!=='undefined' && CARD_ICON[r.type])||'•';
+  const head=`<div class="re-head"><button class="pill ref ref-inline" type="button" data-card="${r.type}::${_esc(ent.id)}">${icon} ${_esc(ent.title||ent.id)}</button> <span class="re-type">${r.type}</span></div>`;
+  if(r.type==='creature'){
+    const cref={ id:ent.id, title:ent.title, srd:ent.srd||null, cr:(ent.cr!=null?ent.cr:null), statblock:S['Statblock']||S['Stat block']||null, notes:S['Notes']||null };
+    return `<div class="ref-embed">${statBlockHtml(cref)}</div>`;
+  }
+  const fields=(SECTION_FIELDS[r.type]||['Notes']).filter(f=>f!=='Statblock');
+  let secs=''; for(const f of fields){ if(S[f]) secs+=`<div class="re-sec"><b>${f}:</b> ${renderProse(S[f], true)}</div>`; }
+  return `<div class="ref-embed">${head}${secs||'<div class="re-sec ed-note">No details yet.</div>'}</div>`;
+}
+/* escape + light markdown + reference tokens. noEmbed=true (inside an embed) downgrades nested embeds to chips. */
+function inlineProse(s, noEmbed){
+  s=_esc(String(s==null?'':s));
+  s=s.replace(/\*\*\*([^*]+)\*\*\*/g,'<strong><em>$1</em></strong>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/\*([^*]+)\*/g,'<em>$1</em>');
+  s=s.replace(/(!?)\[\[([^\]]+)\]\]/g,(m,bang,ref)=> bang ? (noEmbed?refChipHtml(ref):refEmbedHtml(ref)) : refChipHtml(ref));   // single pass: embed output isn't re-scanned
+  return s;
+}
+/* block-aware: lines beginning with '>' become a read-aloud box; blank lines = paragraph breaks. */
+function renderProse(text, noEmbed){
+  if(text==null||text==='') return '';
+  const lines=String(text).split('\n'); const out=[]; let i=0;
+  while(i<lines.length){
+    if(/^\s*>\s?/.test(lines[i])){
+      const buf=[]; while(i<lines.length && /^\s*>\s?/.test(lines[i])){ buf.push(lines[i].replace(/^\s*>\s?/,'')); i++; }
+      const isDlg=/^\s*\*\*.+:\*\*/.test(buf[0]||'');   // leads with a bold speaker → NPC dialogue
+      let hdr, bodyLines;
+      if(isDlg){ hdr=inlineProse((buf[0]||'').replace(/:\*\*(\s*)$/,'**$1'), noEmbed); bodyLines=buf.slice(1); }   // speaker = header (colon dropped)
+      else { hdr='Read-aloud'; bodyLines=buf; }
+      const body=inlineProse(bodyLines.join('\n'), noEmbed).replace(/\n/g,'<br>');
+      out.push(`<div class="read-aloud${isDlg?' dialogue':''}"><div class="ra-h">${hdr}</div><div class="ra-body">${body}</div></div>`);
+    } else {
+      const buf=[]; while(i<lines.length && !/^\s*>\s?/.test(lines[i])){ buf.push(lines[i]); i++; }
+      out.push(inlineProse(buf.join('\n'),noEmbed).replace(/\n{2,}/g,'<br><br>'));
+    }
+  }
+  return out.join('');
+}
+/* read-view scene body. Vault scenes render every section in saved order (incl. custom);
+   the built-in tour scenes (no .sections) use the legacy fixed-field layout. */
 function sceneInner(a){
-  return `${a.purpose?`<div class="mon-block"><h4>Purpose</h4>${a.purpose}</div>`:''}
-    ${a.readAloud?`<div class="mon-block"><h4>Read-aloud</h4><div class="read-aloud">${a.readAloud}</div>
+  if(a.sections) return sceneInnerSections(a);
+  return sceneInnerLegacy(a);
+}
+const PRE_SECTIONS=new Set(['Sensory','If they…','If they...','Treasure','Loot']);   // render monospace-ish
+function sceneInnerSections(a){
+  let html='';
+  for(const name of Object.keys(a.sections)){
+    const content=a.sections[name];
+    if(!content || !String(content).trim()) continue;   // skip empty sections in read view
+    if(name==='Beats'){
+      const items=String(content).split('\n').filter(l=>l.trim().startsWith('-')).map(l=>l.replace(/^\s*-\s*/,'').trim()).filter(Boolean);
+      if(items.length) html+=`<div class="mon-block"><h4>Beats</h4><ul class="beats">${items.map(b=>`<li>${renderProse(b)}</li>`).join('')}</ul></div>`;
+      continue;
+    }
+    if(name==='Read-aloud'){   // legacy "## Read-aloud" section: box it once (strip any '>' so renderProse won't nest a box)
+      html+=`<div class="mon-block"><h4>Read-aloud</h4><div class="read-aloud">${renderProse(String(content).replace(/^\s*>\s?/gm,''))}</div></div>`;
+      continue;
+    }
+    if(name==='Statblock'||name==='Stat block'||name==='Stat Block') continue;   // creatures handled below
+    const cls=PRE_SECTIONS.has(name)?' class="mon-pre"':'';
+    html+=`<div class="mon-block"><h4>${_esc(name)}</h4><div${cls}>${renderProse(content)}</div></div>`;
+  }
+  if(a.creatures&&a.creatures.length) html+=`<div class="mon-block"><h4>Creatures &amp; stat blocks</h4>${a.creatures.map(statBlockHtml).join('')}</div>`;
+  html+=refPills('NPCs','npc',a.npcs)+refPills('Locations','location',a.locations)+refPills('Items','item',a.items)
+       +refPills('Traps','trap',a.traps)+refPills('Tables','table',a.tables)+refPills('Quests','quest',a.quests);
+  return html;
+}
+function sceneInnerLegacy(a){
+  return `${a.purpose?`<div class="mon-block"><h4>Purpose</h4>${renderProse(a.purpose)}</div>`:''}
+    ${a.readAloud?`<div class="mon-block"><h4>Read-aloud</h4><div class="read-aloud">${renderProse(a.readAloud)}</div>
        <div class="src-note">Read-aloud / “box text” — in Augur, paste your own verbatim prose from your licensed material here.</div></div>`:''}
-    ${a.summary?`<div class="mon-block"><h4>Summary</h4>${a.summary}</div>`:''}
-    ${a.beats&&a.beats.length?`<div class="mon-block"><h4>Beats</h4><ul class="beats">${a.beats.map(b=>`<li>${b}</li>`).join('')}</ul></div>`:''}
-    ${a.sensory?`<div class="mon-block"><h4>Sensory</h4><div class="mon-pre">${a.sensory}</div></div>`:''}
-    ${a.ifThey?`<div class="mon-block"><h4>If they…</h4><div class="mon-pre">${a.ifThey}</div></div>`:''}
+    ${a.summary?`<div class="mon-block"><h4>Summary</h4>${renderProse(a.summary)}</div>`:''}
+    ${a.beats&&a.beats.length?`<div class="mon-block"><h4>Beats</h4><ul class="beats">${a.beats.map(b=>`<li>${renderProse(b)}</li>`).join('')}</ul></div>`:''}
+    ${a.sensory?`<div class="mon-block"><h4>Sensory</h4><div class="mon-pre">${renderProse(a.sensory)}</div></div>`:''}
+    ${a.ifThey?`<div class="mon-block"><h4>If they…</h4><div class="mon-pre">${renderProse(a.ifThey)}</div></div>`:''}
     ${a.creatures&&a.creatures.length?`<div class="mon-block"><h4>Creatures & stat blocks</h4>${a.creatures.map(statBlockHtml).join('')}</div>`:''}
-    ${a.treasure?`<div class="mon-block"><h4>Treasure</h4><div class="mon-pre">${a.treasure}</div></div>`:''}
+    ${a.treasure?`<div class="mon-block"><h4>Treasure</h4><div class="mon-pre">${renderProse(a.treasure)}</div></div>`:''}
     ${refPills('NPCs','npc',a.npcs)}
     ${refPills('Locations','location',a.locations)}
     ${refPills('Items','item',a.items)}
@@ -788,7 +1098,8 @@ function onClipPointerDown(e,c){
 
   const items = isHandle ? [{c,start:c.start,dur:c.dur,track:c.track}]
     : [...selected].map(id=>{const cc=clips.find(x=>x.id===id); return {c:cc,start:cc.start,dur:cc.dur,track:cc.track};});
-  drag={ primary:c, mode:isHandle?('trim-'+side):'move', startX:e.clientX, startY:e.clientY, moved:false, items };
+  drag={ primary:c, mode:isHandle?('trim-'+side):'move', startX:e.clientX, startY:e.clientY, moved:false, items,
+    allOrig: clips.map(x=>({c:x, start:x.start, track:x.track})) };   // for reversible ripple of neighbors
   window.addEventListener('pointermove', onDragMove);
   window.addEventListener('pointerup', onDragUp, {once:true});
 }
@@ -810,6 +1121,8 @@ function onDragMove(e){
   if(!drag) return;
   if(!drag.moved && (Math.abs(e.clientX-drag.startX)>2||Math.abs(e.clientY-drag.startY)>2)){ drag.moved=true; pushHistory(); }
   if(!drag.moved) return;
+  const ds=new Set(drag.items.map(it=>it.c));
+  if(drag.allOrig) for(const o of drag.allOrig){ if(!ds.has(o.c)){ o.c.start=o.start; o.c.track=o.track; } }   // reset neighbors → originals (reversible)
   const dxMin=xToMin(e.clientX-drag.startX);
   const thr=SNAP_PX/PX_PER_MIN;
 
@@ -839,8 +1152,35 @@ function onDragMove(e){
     ns=Math.min(it.start+it.dur-MIN_DUR, Math.max(0,ns));
     it.c.dur=it.start+it.dur-ns; it.c.start=ns;
   }
+  rippleResolve(ds);
   renderTimeline(); renderMonitor();
 }
+/* resolve overlaps on one track: pack overlapping left-neighbors; if they'd cross 0, the dragged clip(s)
+   get blocked (shifted right) so nothing overlaps; then push right-neighbors. Gaps preserved. */
+function resolveTrack(tr, draggedArr){
+  const others=clips.filter(c=>!draggedArr.includes(c) && c.track===tr && !c.overlay);
+  let dStart=Infinity, dEnd=-Infinity;
+  for(const d of draggedArr){ dStart=Math.min(dStart,d.start); dEnd=Math.max(dEnd,d.start+d.dur); }
+  const origStart=dStart;
+  // LEFT
+  const left=others.filter(c=>c.start<origStart).sort((a,b)=>b.start-a.start);
+  let boundary=dStart, minStart=0; const packed=[];
+  for(const c of left){ const ns=(c.start+c.dur>boundary)?boundary-c.dur:c.start; packed.push([c,ns]); boundary=ns; if(ns<minStart) minStart=ns; }
+  if(minStart<0){ const shift=-minStart; for(const d of draggedArr) d.start+=shift; dEnd+=shift; for(const p of packed) p[1]+=shift; }
+  for(const p of packed) p[0].start=p[1];
+  // RIGHT
+  const right=others.filter(c=>c.start>=origStart).sort((a,b)=>a.start-b.start);
+  let cur=dEnd; for(const c of right){ if(c.start<cur) c.start=cur; cur=Math.max(cur, c.start+c.dur); }
+}
+function rippleResolve(ds){
+  const trackSet=new Set();
+  for(const it of drag.items){ if(!it.c.overlay) trackSet.add(it.c.track); }
+  for(const tr of trackSet){
+    const dragged=clips.filter(c=>ds.has(c) && c.track===tr && !c.overlay);
+    if(dragged.length) resolveTrack(tr, dragged);
+  }
+}
+function rippleForClip(nc){ if(!nc.overlay) resolveTrack(nc.track, [nc]); }
 function onDragUp(){
   window.removeEventListener('pointermove', onDragMove);
   showGuide(null);
@@ -878,7 +1218,7 @@ function onBagUp(e){
     if(a.type==='clock') track=LANES-1;
     const dur=a.type==='clock'?(a.segments*30):expectedDur(a);
     const c=mkClip(a.id, startMin, dur, track, 'planned');
-    clips.push(c); selectOnly(c.id); commit();
+    clips.push(c); rippleForClip(c); selectOnly(c.id); commit();   // push neighbors out of overlap on drop
   }
   bagDrag.ghost.remove(); bagDrag=null;
 }
@@ -900,14 +1240,15 @@ $('ruler').addEventListener('pointerdown', e=>{ setPlayheadFromClientX(e.clientX
 /* ---------- empty-space click / emergent clip ---------- */
 function isEmpty(t){ return t.id==='lanes'||t.classList.contains('lane')||t.classList.contains('lane-label'); }
 $('lanes').addEventListener('pointerdown', e=>{
-  if(isEmpty(e.target) && selected.size){ selected.clear(); commit(); }
+  if(e.button!==0) return;
+  if(isEmpty(e.target)){ setPlayheadFromClientX(e.clientX); if(selected.size) selected.clear(); commit(); }   // click empty = scrub + deselect
 });
-$('lanes').addEventListener('dblclick', e=>{
+$('lanes').addEventListener('dblclick', async e=>{
   if(!isEmpty(e.target)) return;
   const r=$('lanes').getBoundingClientRect(); const scroll=$('tlScroll');
   const startMin=snap(xToMin(e.clientX - r.left + scroll.scrollLeft));
   let track=Math.min(LANES-2,Math.max(0,Math.floor((e.clientY-r.top)/LANE_H)));
-  const title=prompt('Emergent clip — what happened? (creates a 15-min clip + a Bag stub)');
+  const title=(await uiPrompt({title:'Emergent clip', label:'What happened? Creates a 15-min clip + a Bag stub.', placeholder:'e.g. The ambush at the ford'})||'').trim();
   if(!title) return;
   pushHistory();
   const id='stub_'+(stubSeq++);
@@ -1000,42 +1341,65 @@ function wireFireBtns(){
 }
 
 /* ---------- Markdown recap (played + fires) ---------- */
-function exportRecap(){
+/* Build a Markdown recap. mode='gm' = full game state; mode='player' = outcomes only (no secrets/GM notes). */
+function buildRecap(mode){
+  const title=$('sessTitle').textContent||SESSION_TITLE;
   const played=clips.filter(c=>!c.overlay && c.status==='played').sort((a,b)=>a.start-b.start);
   const end=clips.filter(c=>!c.overlay).reduce((m,c)=>Math.max(m,c.start+c.dur),0);
   const L=[];
-  L.push('# '+SESSION_TITLE+' — Recap');
-  L.push('');
-  L.push(`Target ${fmt(TARGET_MIN)} · ran to ${fmt(end)} · ${played.length} scene${played.length===1?'':'s'} played.`);
-  L.push('');
-  L.push('## Played, in order');
-  if(!played.length) L.push('_Nothing marked played yet — right-click a clip and "Mark as played" as you run it._');
+  L.push(`# ${title} — ${mode==='player'?'Recap':'GM Recap'}`); L.push('');
+  if(!played.length){ L.push('_Nothing marked played yet — right-click a clip and "Mark as played" as you run it._'); return L.join('\n'); }
+  if(mode==='gm'){ L.push(`Target ${fmt(TARGET_MIN)} · ran to ${fmt(end)} · ${played.length} scene${played.length===1?'':'s'} played.`); L.push(''); }
+  L.push(mode==='player'?'## Previously…':'## Played, in order');
   played.forEach((c,i)=>{
-    const a=ASSETS[c.sourceId];
-    const extra=[];
-    if(a.isStub) extra.push('emergent');
-    if(a.type==='sequence') extra.push(a.sceneIds.map(id=>(ASSETS[id]||{}).title||id).join(' → '));
-    L.push(`${i+1}. **${c.label||a.title}** — ${c.dur}m${extra.length?' · '+extra.join(' · '):''}`);
+    const a=ASSETS[c.sourceId]||{}; const name=c.label||a.title||c.sourceId;
+    if(mode==='player'){
+      L.push(`### ${name}`);
+      L.push(c.noteOutcome ? c.noteOutcome : '_(no notes recorded)_');
+      L.push('');
+    } else {
+      const seq=a.type==='sequence'?'  ·  '+(a.sceneIds||[]).map(id=>(ASSETS[id]||{}).title||id).join(' → '):'';
+      L.push(`### ${i+1}. ${name}  ·  ${c.dur}m${seq}`);
+      if(c.noteOutcome) L.push('**What happened:** '+c.noteOutcome);
+      if(c.noteGM) L.push('**GM:** '+c.noteGM);
+      if(!c.noteOutcome && !c.noteGM) L.push('_(no notes)_');
+      L.push('');
+    }
   });
-  L.push('');
-  L.push('## World pressure');
-  const clockClips=clips.filter(c=>c.overlay);
-  if(!clockClips.length) L.push('_No clocks on the timeline._');
-  clockClips.forEach(c=>{
-    const a=ASSETS[c.sourceId];
-    L.push(`- **${a.title}** — ${c.filled||0}/${a.segments} filled`);
-    fires.filter(f=>f.clockClipId===c.id).sort((x,y)=>x.atMin-y.atMin).forEach(fr=>{
-      if(fr.flavor==='run_beat'){ const s=ASSETS[fr.sequenceId]; L.push(`  - fired @ ${fmt(fr.atMin)}: run **${s?s.title:'beat'}**`); }
-      else L.push(`  - fired @ ${fmt(fr.atMin)}: world-state — ${fr.note||''}`);
+  if(mode==='gm'){
+    L.push('## World pressure (clocks)');
+    const clockClips=clips.filter(c=>c.overlay);
+    if(!clockClips.length) L.push('_No clocks on the timeline._');
+    clockClips.forEach(c=>{ const a=ASSETS[c.sourceId]||{};
+      L.push(`- **${a.title}** — ${c.filled||0}/${a.segments} filled`);
+      fires.filter(f=>f.clockClipId===c.id).sort((x,y)=>x.atMin-y.atMin).forEach(fr=>{
+        if(fr.flavor==='run_beat'){ const s=ASSETS[fr.sequenceId]; L.push(`  - fired @ ${fmt(fr.atMin)}: run **${s?s.title:'beat'}**`); }
+        else L.push(`  - fired @ ${fmt(fr.atMin)}: world-state — ${fr.note||''}`); });
     });
-  });
-  const md=L.join('\n');
-  const blob=new Blob([md],{type:'text/markdown'});
-  const url=URL.createObjectURL(blob);
-  const an=document.createElement('a'); an.href=url; an.download='augur-recap.md';
-  document.body.appendChild(an); an.click(); an.remove();
+    const planned=clips.filter(c=>!c.overlay && c.status!=='played').sort((a,b)=>a.start-b.start);
+    if(planned.length){ L.push(''); L.push('## Didn’t get to'); planned.forEach(c=>{ const a=ASSETS[c.sourceId]||{}; L.push(`- ${c.label||a.title||c.sourceId}`); }); }
+  }
+  return L.join('\n');
+}
+function downloadMd(md, name){
+  if(typeof window!=='undefined' && window.augurSaveText){ window.augurSaveText(md, name); return; }   // native Save dialog in the Tauri build
+  const blob=new Blob([md],{type:'text/markdown'}); const url=URL.createObjectURL(blob);
+  const an=document.createElement('a'); an.href=url; an.download=name; document.body.appendChild(an); an.click(); an.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
-  return md;
+}
+function recapChooser(){
+  const st=slug($('sessTitle').textContent||'augur');
+  $('editor').innerHTML=`<div class="ed-box" style="max-width:400px"><div class="ed-head">Export Recap</div>
+    <div class="ed-body"><div class="ed-note">Built from what you marked <b>played</b> plus the per-scene session notes.</div>
+      <div class="rec-choose">
+        <button id="recGM" class="rec-btn"><b>GM Recap</b><span>Full game state — outcomes, GM notes, clocks &amp; fires, and what you didn’t get to.</span></button>
+        <button id="recPlayer" class="rec-btn"><b>Player Recap</b><span>“Previously on…” — outcomes only. GM notes &amp; secrets left out.</span></button>
+      </div></div>
+    <div class="ed-foot"><button id="recCancel">Cancel</button></div></div>`;
+  $('editor').classList.add('show'); $('recCancel').onclick=closeEditor;
+  $('editor').onclick=ev=>{ if(ev.target===$('editor')) closeEditor(); };
+  $('recGM').onclick=()=>{ downloadMd(buildRecap('gm'), st+'-gm-recap.md'); closeEditor(); $('saveNote').textContent='GM recap exported ✓'; };
+  $('recPlayer').onclick=()=>{ downloadMd(buildRecap('player'), st+'-player-recap.md'); closeEditor(); $('saveNote').textContent='player recap exported ✓'; };
 }
 
 /* ---------- context menu ---------- */
@@ -1069,23 +1433,23 @@ function openCtx(e,c){
   m.style.left=Math.max(8,x)+'px'; m.style.top=Math.max(8,y)+'px';
   ctxEl=m;
   m.addEventListener('pointerdown', ev=>ev.stopPropagation());
-  m.querySelectorAll('button').forEach(b=>b.addEventListener('click', ()=>{
+  m.querySelectorAll('button').forEach(b=>b.addEventListener('click', async ()=>{
     const act=b.dataset.act;
     if(act==='collapse'){ c.collapsed=!c.collapsed; if(c.collapsed)c.focusSceneId=null; }
-    else if(act==='segs'){ const v=parseInt(prompt('Number of segments:', a.segments),10); if(v>0){ a.segments=v; if((c.filled||0)>v)c.filled=v; registerAsset(a); } }
+    else if(act==='segs'){ const v=parseInt(await uiPrompt({title:'Clock segments', label:'How many segments?', value:String(a.segments)}),10); if(v>0){ a.segments=v; if((c.filled||0)>v)c.filled=v; registerAsset(a); } }
     else if(act==='th-run'){
       const dlist=Object.values(ASSETS).filter(x=>x.type==='sequence' && x.kind==='distributed');
-      if(!dlist.length){ alert('No distributed sequences to link a run-beat to yet.'); }
-      else { const seg=parseInt(prompt('Fire at which segment? (1–'+a.segments+')', (c.filled||0)+1),10);
-        if(seg>0){ const choice=parseInt(prompt('Link which distributed sequence?\n'+dlist.map((s,i)=>(i+1)+') '+s.title).join('\n'),'1'),10)-1;
+      if(!dlist.length){ await uiAlert('No distributed sequences to link a run-beat to yet.','Add run-beat threshold'); }
+      else { const seg=parseInt(await uiPrompt({title:'Run-beat threshold', label:'Fire at which segment? (1–'+a.segments+')', value:String((c.filled||0)+1)}),10);
+        if(seg>0){ const choice=parseInt(await uiPrompt({title:'Link sequence', label:'Which distributed sequence? Enter its number: '+dlist.map((s,i)=>(i+1)+') '+s.title).join('  ·  '), value:'1'}),10)-1;
           if(dlist[choice]){ a.thresholds=a.thresholds||[]; a.thresholds.push({at:seg,fires:'run_beat',sequenceId:dlist[choice].id}); registerAsset(a); } } } }
     else if(act==='th-world'){
-      const seg=parseInt(prompt('Fire at which segment? (1–'+a.segments+')', (c.filled||0)+1),10);
-      if(seg>0){ const note=prompt('World-state change (what happens off-screen):'); if(note){ a.thresholds=a.thresholds||[]; a.thresholds.push({at:seg,fires:'world_state',note}); registerAsset(a); } } }
+      const seg=parseInt(await uiPrompt({title:'World-state threshold', label:'Fire at which segment? (1–'+a.segments+')', value:String((c.filled||0)+1)}),10);
+      if(seg>0){ let note=await uiPrompt({title:'World-state threshold', label:'What happens off-screen?'}); note=(note||'').trim(); if(note){ a.thresholds=a.thresholds||[]; a.thresholds.push({at:seg,fires:'world_state',note}); registerAsset(a); } } }
     else if(act==='th-clear'){ a.thresholds=[]; registerAsset(a); }
     else { pushHistory();
-      if(act==='rename'){ const v=prompt('Instance label:', c.label||a.title); if(v!==null) c.label=v||null; }
-      else if(act==='dur'){ const v=prompt('Display duration (minutes):', c.dur); const n=parseInt(v,10); if(n>0) c.dur=n; }
+      if(act==='rename'){ const v=await uiPrompt({title:'Rename instance', label:'Label for this clip', value:c.label||a.title}); if(v!==null) c.label=v.trim()||null; }
+      else if(act==='dur'){ const v=await uiPrompt({title:'Set '+(isClock?'span':'duration'), label:'Display duration (minutes)', value:String(c.dur)}); const n=parseInt(v,10); if(n>0) c.dur=n; }
       else if(act==='played'){ c.status = c.status==='played'?'planned':'played'; }
       else if(act==='ungroup'){ ungroup(c); }
       else if(act==='remove'){ clips=clips.filter(x=>x.id!==c.id); selected.delete(c.id); }
@@ -1141,8 +1505,8 @@ function commit(){ renderBag(); renderTimeline(); renderMonitor(); updateButtons
 $('btnAddLane').addEventListener('click', ()=>{ pushHistory(); LANES++; commit(); $('tlScroll').scrollTop=$('tlScroll').scrollHeight; });
 $('btnUndo').addEventListener('click', undo);
 $('btnRedo').addEventListener('click', redo);
-$('btnReset').addEventListener('click', ()=>{ if(confirm('Clear saved state and reload the sample timeline?')){ try{localStorage.removeItem(KEY);}catch(e){} location.reload(); } });
-$('btnRecap').addEventListener('click', exportRecap);
+$('btnReset').addEventListener('click', async ()=>{ if(await uiConfirm('Reset','Clear saved state and reload the built-in tutorial? This discards the current timeline.','Reset')){ try{localStorage.removeItem(KEY);}catch(e){} location.reload(); } });
+$('btnRecap').addEventListener('click', recapChooser);
 
 /* ---------- load a Markdown vault / .augur into the Bag ---------- */
 function rebuildSeedAssets(){
@@ -1152,7 +1516,7 @@ function rebuildSeedAssets(){
 }
 function loadSeed(){
   rebuildSeedAssets(); VAULT=null;
-  lastAssetRecs=[]; vaultDirHandle=null;
+  lastAssetRecs=[]; vaultDirHandle=null; monEdit=false;
   vaultLoaded=false; TARGET_MIN=180;
   clips=seedClips(); playhead=10; fires=[]; pendingFire=null;
   selected.clear(); undoStack=[]; redoStack=[];
@@ -1171,13 +1535,13 @@ function redriveFromVault(){
 function loadVaultRecs(recs){
   const v=buildVault(recs);
   if(v.issues.errors.length){
-    alert('Vault has '+v.issues.errors.length+' error(s) and was not loaded:\n\n'+v.issues.errors.slice(0,10).join('\n'));
+    uiAlert('Vault has '+v.issues.errors.length+' error(s) and was not loaded:\n\n'+v.issues.errors.slice(0,10).join('\n'));
     return;
   }
-  if(!v.byType.scene.length && !v.byType.sequence.length && !v.byType.clock.length){ alert('No scenes/sequences/clocks found in that vault.'); return; }
+  if(!v.byType.scene.length && !v.byType.sequence.length && !v.byType.clock.length){ uiAlert('No scenes/sequences/clocks found in that vault.'); return; }
   VAULT=v;
   lastAssetRecs=(recs||[]).filter(r=>r && !r.isText && r.bytes);
-  vaultDirHandle=null;
+  vaultDirHandle=null; monEdit=false;
   const a=redriveFromVault();
   vaultLoaded=true;
   clips=a.clips; playhead=a.playhead; fires=a.fires; pendingFire=null;
@@ -1189,6 +1553,104 @@ function loadVaultRecs(recs){
   $('sessTitle').textContent=mt;
   commit();
   $('saveNote').textContent = 'vault loaded'+(w?(' · '+w+' warning'+(w>1?'s':'')):'');
+}
+
+/* ---------- start from scratch / load the bundled sample ---------- */
+async function newVault(){
+  if(vaultLoaded && !(await uiConfirm('New Vault','Start a new vault? Unsaved changes to the current vault will be lost.','Start new'))) return;
+  const camp = '---\nid: my-campaign\ntype: campaign\ntitle: New Campaign\n---\n\n## Overview\nYour new campaign. Rename things and start adding scenes, then drag them onto the timeline.\n';
+  const scn = '---\nid: opening-scene\ntype: scene\ntitle: Opening Scene\nduration: { min: 20, max: 40, confidence: loose }\n---\n\n## Purpose\nWhat this scene is for.\n\n## Read-aloud\nBoxed text you read to the players.\n\n## Summary\nWhat happens here.\n\n## Beats\n- First beat\n- Second beat\n';
+  const session = JSON.stringify({ id:'session', title:'New Session', playheadMinutes:0, targetDurationMinutes:180,
+    clips:[{ id:'c1', sourceId:'opening-scene', sourceType:'scene', startMinutes:0, displayDurationMinutes:30, trackIndex:0, status:'planned' }], fires:[] }, null, 2);
+  const manifest = JSON.stringify({ title:'New Campaign', format:'augur-vault', version:'0.2' }, null, 2);
+  loadVaultRecs([
+    { path:'campaign.md', name:'campaign.md', text:camp, isText:true },
+    { path:'scenes/opening-scene.md', name:'opening-scene.md', text:scn, isText:true },
+    { path:'sessions/session.json', name:'session.json', text:session, isText:true },
+    { path:'augur.json', name:'augur.json', text:manifest, isText:true },
+  ]);
+  $('saveNote').textContent='new vault ✓ — edit, then Save';
+}
+async function loadSampleAdventure(){
+  try{
+    const res = await fetch('toadwallow-bridge.augur');
+    if(!res || !res.ok) throw new Error('sample not found ('+(res?res.status:'no response')+')');
+    const entries = await unzip(await res.arrayBuffer());
+    const td=new TextDecoder();
+    loadVaultRecs(entries.map(en=>{ const isText=/\.(md|json)$/i.test(en.name);
+      return { path:en.name, name:en.name.split('/').pop(), text:isText?td.decode(en.bytes):'', bytes:isText?null:en.bytes, isText }; }));
+  }catch(err){
+    uiAlert('Could not load the bundled sample: '+err.message+'\n\nIf you are running the standalone .html in a browser, use “⤒ .augur” and pick toadwallow-bridge.augur instead.');
+  }
+}
+
+/* ---------- right-click: add an element (replaces the need for a separate vault editor) ---------- */
+const ADD_TYPES=[['scene','🎬 Scene'],['npc','👤 NPC'],['location','📍 Location'],['item','📦 Item'],['creature','👹 Creature'],['clock','⏱ Clock'],['sequence','🎞 Sequence'],['trap','⚠ Trap'],['table','🎲 Table'],['quest','🎯 Quest'],['handout','📄 Handout']];
+function openAddMenu(e){
+  e.preventDefault(); closeCtx();
+  const m=document.createElement('div'); m.className='ctx';
+  if(!vaultLoaded){
+    m.innerHTML='<h5>Nothing to add yet</h5><button data-new="1">＋ Start a New Vault</button><button data-sample="1">★ Load the sample adventure</button>';
+  } else {
+    m.innerHTML='<h5>Add to vault</h5>'+ADD_TYPES.map(([t,lbl])=>`<button data-add="${t}">${lbl}</button>`).join('');
+  }
+  document.body.appendChild(m);
+  const r=m.getBoundingClientRect(); let x=e.clientX, y=e.clientY;
+  if(x+r.width  > window.innerWidth  - 8) x=window.innerWidth  - 8 - r.width;
+  if(y+r.height > window.innerHeight - 8) y=window.innerHeight - 8 - r.height;
+  m.style.left=Math.max(8,x)+'px'; m.style.top=Math.max(8,y)+'px'; ctxEl=m;
+  m.addEventListener('pointerdown', ev=>ev.stopPropagation());
+  m.querySelectorAll('button').forEach(b=>b.addEventListener('click', ()=>{
+    if(b.dataset.new){ closeCtx(); newVault(); return; }
+    if(b.dataset.sample){ closeCtx(); loadSampleAdventure(); return; }
+    closeCtx(); quickCreate(b.dataset.add);
+  }));
+}
+async function quickCreate(type){
+  if(!VAULT) return;
+  const title=(await uiPrompt({title:'New '+type, label:'Title'})||'').trim(); if(!title) return;
+  const id=slug(title);
+  const body = type==='creature' ? '## Statblock\n*Custom monster — fill in AC, HP, abilities, actions.*\n' : '';
+  pushHistory(); const r=createEntity(VAULT, type, id, {title}, body);
+  if(r.error){ uiAlert(r.error); return; }
+  rebuildVault(); commit(); openEditor(type, id); $('saveNote').textContent='created ✓';
+}
+function openBagItemMenu(e, type, id, title){
+  e.preventDefault(); closeCtx();
+  const m=document.createElement('div'); m.className='ctx';
+  m.innerHTML=`<h5>${_esc(title||id)}</h5><button data-edit="1">✎ Edit ${type}…</button><button class="danger" data-del="1">🗑 Delete ${type}…</button>`;
+  document.body.appendChild(m);
+  const r=m.getBoundingClientRect(); let x=e.clientX, y=e.clientY;
+  if(x+r.width  > window.innerWidth  - 8) x=window.innerWidth  - 8 - r.width;
+  if(y+r.height > window.innerHeight - 8) y=window.innerHeight - 8 - r.height;
+  m.style.left=Math.max(8,x)+'px'; m.style.top=Math.max(8,y)+'px'; ctxEl=m;
+  m.addEventListener('pointerdown', ev=>ev.stopPropagation());
+  m.querySelector('[data-edit]').onclick=()=>{ closeCtx(); openEditor(type,id); };
+  m.querySelector('[data-del]').onclick=()=>{ closeCtx(); confirmDelete(type,id,title); };
+}
+/* typed-DELETE confirmation (custom modal — no browser "site says" prompt) */
+function confirmDelete(type, id, title){
+  if(!VAULT) return;
+  const info=(typeof referrersOf!=='undefined') ? referrersOf(VAULT, type, id) : {refs:[],clips:0};
+  const warn=(info.refs.length?`Unlinks ${info.refs.length} reference${info.refs.length>1?'s':''}. `:'')+(info.clips?`Removes ${info.clips} timeline clip${info.clips>1?'s':''}. `:'');
+  $('editor').innerHTML=`<div class="ed-box" style="max-width:400px">
+    <div class="ed-head">Delete ${type} · <code>${_esc(id)}</code></div>
+    <div class="ed-body"><div class="ed-note"><b>${_esc(title||id)}</b> will be permanently removed. ${_esc(warn)}You can undo with Ctrl/Cmd-Z until you reload.</div>
+      <label class="ed-f">Type <b>DELETE</b> to confirm<input id="delConfirm" placeholder="DELETE" autocomplete="off"></label></div>
+    <div class="ed-foot"><button id="delCancel">Cancel</button><button id="delOk" class="danger">Delete</button></div></div>`;
+  $('editor').classList.add('show');
+  $('editor').onclick=ev=>{ if(ev.target===$('editor')) closeEditor(); };
+  $('delCancel').onclick=closeEditor;
+  const go=()=>{
+    if(($('delConfirm').value||'').trim().toUpperCase()!=='DELETE'){ $('delConfirm').focus(); return; }
+    pushHistory(); deleteEntity(VAULT, type, id);
+    clips=clips.filter(cl=>!(cl.sourceType===type && cl.sourceId===id));   // drop any now-dangling timeline clips
+    selected.clear(); monEdit=false;
+    rebuildVault(); closeEditor(); commit(); $('saveNote').textContent='deleted ✓';
+  };
+  $('delOk').onclick=go;
+  $('delConfirm').addEventListener('keydown', e=>{ if(e.key==='Enter') go(); });
+  $('delConfirm').focus();
 }
 
 /* ---------- entity editing (stage 2) ---------- */
@@ -1208,8 +1670,21 @@ function setSection(ent, name, content){
   if(!replaced && content){ if(out.length && out[out.length-1].trim()!=='') out.push(''); out.push('## '+name); out.push(content); }
   ent.body=out.join('\n').replace(/\n{3,}/g,'\n\n').trim();
 }
+/* split a markdown body into a preamble + ordered [{name,content}] sections (mirrors parseSections). */
+function bodySections(body){
+  body=String(body||''); const parts=body.split(/^##\s+/m);
+  const pre=(parts[0]||'').trim(); const secs=[];
+  for(let k=1;k<parts.length;k++){ const seg=parts[k]; const nl=seg.indexOf('\n');
+    const name=(nl<0?seg:seg.slice(0,nl)).trim(); const content=(nl<0?'':seg.slice(nl+1)).trim();
+    secs.push({name,content}); }
+  return {pre, secs};
+}
+function bodyFromSections(pre, secs){
+  const blocks=secs.map(s=>'## '+s.name+(s.content?('\n'+s.content):''));
+  return [pre, ...blocks].filter(Boolean).join('\n\n').replace(/\n{3,}/g,'\n\n').trim();
+}
 const SECTION_FIELDS = {
-  scene:['Purpose','Read-aloud','Summary','Beats','Sensory','If they…','Notes'],
+  scene:['Purpose','Summary','Beats','Sensory','If they…','Notes'],
   sequence:['Summary','Notes'], clock:['Summary','Notes'],
   npc:['Description','Voice','Goals','Mood','Secrets','Notes'], location:['Description','Read-aloud','Notes'],
   creature:['Statblock','Notes'], item:['Description','Notes'], trap:['Trigger','Effect','Notes'],
@@ -1225,8 +1700,8 @@ function rebuildVault(){
   redriveFromVault();
 }
 /* write the open form's scalar + section edits into the entity (no rebuild/commit) */
-function applyFormFields(ent){
-  const E=$('editor'); const get=k=>{ const el=E.querySelector('[data-f="'+k+'"]'); return el?el.value:undefined; };
+function applyFormFields(ent, E){
+  E=E||$('editor'); const get=k=>{ const el=E.querySelector('[data-f="'+k+'"]'); return el?el.value:undefined; };
   const t=(get('__title')||'').trim(); if(t) ent.title=t;
   if(ent.type==='scene'){
     const mn=parseInt(get('__dmin'),10), mx=parseInt(get('__dmax'),10);
@@ -1271,11 +1746,197 @@ function wireRels(){
   E.querySelectorAll('.rel-rm').forEach(b=>b.onclick=()=>relAction(()=>removeRelation(editEntity, b.dataset.field, b.dataset.single==='true', b.dataset.rid)));
   E.querySelectorAll('.rel-go').forEach(g=>g.onclick=()=>{ const [t,i]=g.dataset.go.split('::'); if(editEntity) applyFormFields(editEntity); if(VAULT.byId.get(t+'::'+i)) openEditor(t,i); });
   E.querySelectorAll('.ed-rel-add').forEach(s=>s.onchange=()=>{ if(s.value) relAction(()=>addRelation(editEntity, s.dataset.field, s.dataset.single==='true', s.value)); });
-  E.querySelectorAll('.ed-rel-new').forEach(b=>b.onclick=()=>{
-    const target=b.dataset.target; const title=(prompt('New '+target+' title:')||'').trim(); if(!title) return;
+  E.querySelectorAll('.ed-rel-new').forEach(b=>b.onclick=async()=>{
+    const target=b.dataset.target; const title=(await uiPrompt({title:'New '+target, label:'Title'})||'').trim(); if(!title) return;
     const nid=slug(title); const scaffold = target==='creature' ? '## Statblock\n*Custom monster — fill in AC, HP, abilities, actions.*\n' : '';
-    relAction(()=>{ const r=createEntity(VAULT, target, nid, {title}, scaffold); if(r.error){ alert(r.error); } else addRelation(editEntity, b.dataset.field, b.dataset.single==='true', nid); });
+    relAction(()=>{ const r=createEntity(VAULT, target, nid, {title}, scaffold); if(r.error){ uiAlert(r.error); } else addRelation(editEntity, b.dataset.field, b.dataset.single==='true', nid); });
   });
+}
+/* ---------- inline WYSIWYG editor rendered into the Monitor (edit-mode toggle) ---------- */
+/* Obsidian-style document editor: the read view's structure (heading + prose) with seamless,
+   borderless, auto-growing editable text. Same data-f / data-sec hooks → reuses applyFormFields. */
+function monEditorHtml(ent){
+  const type=ent.type;
+  let html=`<input class="me-title" data-f="__title" value="${_esc(ent.title||'')}" placeholder="Untitled ${type}">`;
+  if(type==='scene'){ const d=ent.duration||{};
+    html+=`<div class="me-meta"><input class="me-num" type="number" min="1" data-f="__dmin" value="${d.min==null?'':d.min}">–<input class="me-num" type="number" min="1" data-f="__dmax" value="${d.max==null?'':d.max}"> min · <select class="me-sel" data-f="__conf">${['tight','loose'].map(o=>`<option${o===(d.confidence||'loose')?' selected':''}>${o}</option>`).join('')}</select> · <label class="me-chk"><input type="checkbox" data-f="__ender" ${ent.ender?'checked':''}> 🏁 session-ender</label></div>`; }
+  else if(type==='clock'){
+    html+=`<div class="me-meta"><input class="me-num" type="number" min="1" data-f="__segs" value="${ent.segments==null?'':ent.segments}"> segments · <select class="me-sel" data-f="__scope">${['campaign','local'].map(o=>`<option${o===(ent.scope||'local')?' selected':''}>${o}</option>`).join('')}</select></div>`; }
+  else if(type==='sequence'){
+    html+=`<div class="me-meta">kind · <select class="me-sel" data-f="__kind">${['tight','distributed'].map(o=>`<option${o===(ent.kind||'distributed')?' selected':''}>${o}</option>`).join('')}</select></div>`; }
+  const list=SECTION_FIELDS[type]||['Notes'];
+  const present=Object.keys(ent.sections||{});       // saved order (= body order after rebuild)
+  const missing=list.filter(s=>!present.includes(s));// built-in defaults not yet used → offered empty to fill
+  for(const s of [...present, ...missing]){
+    const ra = s==='Read-aloud' ? ' readaloud' : '';
+    const isPresent=present.includes(s), builtin=list.includes(s);
+    const tools=isPresent
+      ? `<span class="me-sec-tools"><button class="me-sec-btn" data-sop="up" title="Move up">↑</button><button class="me-sec-btn" data-sop="down" title="Move down">↓</button>`
+        +(builtin?'':`<button class="me-sec-btn" data-sop="rename" title="Rename section">✎</button><button class="me-sec-btn" data-sop="del" title="Remove section">✕</button>`)
+        +`</span>`
+      : '';
+    html+=`<div class="mon-block me-sec" data-secname="${_esc(s)}"><div class="me-sec-h"><h4>${_esc(s)}</h4>${tools}</div>`
+      +`<textarea class="me-area${ra}" data-sec="${_esc(s)}" rows="1" placeholder="…">${_esc((ent.sections&&ent.sections[s])||'')}</textarea></div>`;
+  }
+  html+=`<button class="me-addsec" id="meAddSec">＋ Add section</button>`;
+  html+=`<div class="ed-rels" id="monRels">${relsBody(ent)}</div>`;
+  return `<div class="mon-edit">${html}</div>`;
+}
+function autoGrow(ta){ ta.style.height='auto'; ta.style.height=Math.max(ta.scrollHeight,22)+'px'; }
+function wireMonEditor(ent){
+  const root=$('monitor').querySelector('.mon-edit'); if(!root) return;
+  root.querySelectorAll('textarea.me-area').forEach(ta=>{ autoGrow(ta); ta.addEventListener('input', ()=>autoGrow(ta)); });   // grow to fit text
+  root.querySelectorAll('[data-f],[data-sec]').forEach(el=>{
+    el.addEventListener('change', ()=>{ applyFormFields(ent, root); redriveFromVault(); renderTimeline(); renderBag(); save(); });   // autosave on blur; no monitor re-render (keeps focus/flow)
+  });
+  // section structure: add / rename / delete / reorder (re-renders the editor, still in edit mode)
+  const structEdit=fn=>{ applyFormFields(ent, root); pushHistory(); const ps=bodySections(ent.body); fn(ps.secs); ent.body=bodyFromSections(ps.pre, ps.secs); rebuildVault(); commit(); };
+  root.querySelectorAll('.me-sec-btn').forEach(b=>b.onclick=async()=>{
+    const sec=b.closest('.me-sec').getAttribute('data-secname'), op=b.dataset.sop;
+    if(op==='rename'){ const nn=(await uiPrompt({title:'Rename section', label:'New section name', value:sec})||'').trim(); if(!nn||nn===sec) return;
+      structEdit(secs=>{ const s=secs.find(x=>x.name===sec); if(s) s.name=nn; }); return; }
+    structEdit(secs=>{ const i=secs.findIndex(x=>x.name===sec); if(i<0) return;
+      if(op==='up'&&i>0){ const t=secs[i-1]; secs[i-1]=secs[i]; secs[i]=t; }
+      else if(op==='down'&&i<secs.length-1){ const t=secs[i+1]; secs[i+1]=secs[i]; secs[i]=t; }
+      else if(op==='del'){ secs.splice(i,1); } });
+  });
+  const addBtn=root.querySelector('#meAddSec');
+  if(addBtn) addBtn.onclick=async()=>{ const nn=(await uiPrompt({title:'Add section', label:'Section name', placeholder:'e.g. The Standoff'})||'').trim(); if(!nn) return;
+    structEdit(secs=>{ if(!secs.some(x=>x.name.toLowerCase()===nn.toLowerCase())) secs.push({name:nn, content:''}); }); };
+  wireMonRels(ent);
+}
+function wireMonRels(ent){
+  const E=$('monRels'); if(!E) return;
+  const root=$('monitor').querySelector('.mon-edit');
+  const act=fn=>{ if(root) applyFormFields(ent, root); pushHistory(); fn(); rebuildVault(); commit(); };   // commit re-renders the Monitor (still in edit mode) with refreshed relations
+  E.querySelectorAll('.rel-rm').forEach(b=>b.onclick=()=>act(()=>removeRelation(ent, b.dataset.field, b.dataset.single==='true', b.dataset.rid)));
+  E.querySelectorAll('.rel-go').forEach(g=>g.onclick=()=>{ const [t,i]=g.dataset.go.split('::'); if(VAULT.byId.get(t+'::'+i)) openCard(t,i); });
+  E.querySelectorAll('.ed-rel-add').forEach(s=>s.onchange=()=>{ if(s.value) act(()=>addRelation(ent, s.dataset.field, s.dataset.single==='true', s.value)); });
+  E.querySelectorAll('.ed-rel-new').forEach(b=>b.onclick=async()=>{
+    const target=b.dataset.target; const title=(await uiPrompt({title:'New '+target, label:'Title'})||'').trim(); if(!title) return;
+    const nid=slug(title); const scaffold = target==='creature' ? '## Statblock\n*Custom monster — fill in AC, HP, abilities, actions.*\n' : '';
+    act(()=>{ const r=createEntity(VAULT, target, nid, {title}, scaffold); if(r.error){ uiAlert(r.error); } else addRelation(ent, b.dataset.field, b.dataset.single==='true', nid); });
+  });
+}
+async function renameInline(type,id){
+  const ni=(await uiPrompt({title:'Rename id', label:'New id (slug) — updates every reference', value:id})||'').trim();
+  if(!ni||ni===id) return;
+  pushHistory();
+  const r=renameEntity(VAULT, type, id, ni); if(r.error){ uiAlert(r.error); return; }
+  for(const cl of clips){ if(cl.sourceType===type && cl.sourceId===id) cl.sourceId=ni; }   // keep live timeline clips pointing at the renamed entity
+  rebuildVault(); monEditRef={type, id:ni}; commit(); $('saveNote').textContent='renamed ✓';
+}
+/* ---------- insert an inline reference (right-click in a section) ---------- */
+const REF_INSERT_TYPES=[['npc','👤 NPC'],['creature','👹 Stat block / Creature'],['location','📍 Location'],['item','📦 Item'],['trap','⚠ Trap'],['table','🎲 Table'],['quest','🎯 Quest']];
+function openInsertRefMenu(e, ta, secName){
+  if(!VAULT) return;
+  e.preventDefault(); closeCtx();
+  const selA=ta?ta.selectionStart:0, selB=ta?ta.selectionEnd:0;
+  const m=document.createElement('div'); m.className='ctx';
+  let html='';
+  if(ta){
+    html+='<h5>Insert</h5>'
+      +'<button data-ins="readaloud">📢 Read-aloud box</button>'
+      +'<button data-ins="dialogue">💬 NPC dialogue…</button>'
+      +'<div class="sep"></div><h5>Reference</h5>'
+      +REF_INSERT_TYPES.map(([t,lbl])=>`<button data-rt="${t}">${lbl}</button>`).join('')
+      +'<div class="sep"></div>';
+  }
+  html+=`<button data-addsec="1">＋ Add section${secName?' below':''}…</button>`;
+  m.innerHTML=html;
+  document.body.appendChild(m);
+  const r=m.getBoundingClientRect(); let x=e.clientX, y=e.clientY;
+  if(x+r.width  > window.innerWidth  - 8) x=window.innerWidth  - 8 - r.width;
+  if(y+r.height > window.innerHeight - 8) y=window.innerHeight - 8 - r.height;
+  m.style.left=Math.max(8,x)+'px'; m.style.top=Math.max(8,y)+'px'; ctxEl=m;
+  m.addEventListener('pointerdown', ev=>ev.stopPropagation());
+  if(ta){
+    m.querySelector('[data-ins="readaloud"]').onclick=()=>{ closeCtx(); insertReadAloud(ta, selA, selB); };
+    m.querySelector('[data-ins="dialogue"]').onclick=()=>{ closeCtx(); openRefPicker(ta, 'npc', selA, selB, {dialogue:true}); };
+    m.querySelectorAll('[data-rt]').forEach(btn=>btn.onclick=()=>{ closeCtx(); openRefPicker(ta, btn.dataset.rt, selA, selB); });
+  }
+  m.querySelector('[data-addsec]').onclick=()=>{ closeCtx(); addSectionAt(secName); };
+}
+/* add a new section, inserted right after `afterName` (or appended), then focus it */
+async function addSectionAt(afterName){
+  const ent=(monEditRef && VAULT && VAULT.byId.get(monEditRef.type+'::'+monEditRef.id))||null; if(!ent) return;
+  const root=$('monitor').querySelector('.mon-edit'); if(!root) return;
+  const nn=(await uiPrompt({title:'Add section', label:'Section name', placeholder:'e.g. The Standoff'})||'').trim(); if(!nn) return;
+  applyFormFields(ent, root); pushHistory();
+  const ps=bodySections(ent.body);
+  if(!ps.secs.some(s=>s.name.toLowerCase()===nn.toLowerCase())){
+    const idx=afterName ? ps.secs.findIndex(s=>s.name===afterName) : -1;
+    ps.secs.splice(idx>=0 ? idx+1 : ps.secs.length, 0, {name:nn, content:''});
+  }
+  ent.body=bodyFromSections(ps.pre, ps.secs);
+  rebuildVault(); commit();
+  for(const s of $('monitor').querySelectorAll('.me-sec')){   // focus the new section so the user can type immediately
+    if(s.getAttribute('data-secname')===nn){ const t=s.querySelector('textarea.me-area'); if(t){ t.focus(); t.scrollIntoView({block:'center'}); } break; }
+  }
+}
+/* drop a read-aloud (blockquote → boxed, headered) at the cursor; wraps any selected text. */
+function insertReadAloud(ta, selA, selB){
+  if(!VAULT) return;
+  const sel=ta.value.slice(selA,selB);
+  const inner=(sel||'Box text to read aloud to the players.');
+  const before=ta.value.slice(0,selA), after=ta.value.slice(selB);
+  const lead=(before && !before.endsWith('\n')) ? '\n' : '';
+  const trail=(after && !after.startsWith('\n')) ? '\n' : '';
+  ta.value=before+lead+inner.split('\n').map(l=>'> '+l).join('\n')+trail+after;
+  const sceneEnt=(monEditRef && VAULT.byId.get(monEditRef.type+'::'+monEditRef.id))||null;
+  const root=$('monitor').querySelector('.mon-edit');
+  if(sceneEnt && root){ pushHistory(); applyFormFields(sceneEnt, root); rebuildVault(); commit(); $('saveNote').textContent='read-aloud inserted ✓'; }
+}
+function openRefPicker(ta, type, selA, selB, opts){
+  if(!VAULT) return;
+  opts=opts||{};
+  const sceneEnt = (monEditRef && VAULT.byId.get(monEditRef.type+'::'+monEditRef.id)) || null;
+  let mode=opts.dialogue?'link':'embed';
+  const listHtml=q=>{
+    const items=(VAULT.byType[type]||[]).filter(en=>!q || String(en.title||en.id).toLowerCase().includes(q.toLowerCase()));
+    if(!items.length) return '<div class="ed-note">No '+type+'s yet — create one below.</div>';
+    return items.map(en=>`<button class="rp-item" data-id="${_esc(en.id)}">${_esc(en.title||en.id)} <span class="lib-id">${_esc(en.id)}</span></button>`).join('');
+  };
+  $('editor').innerHTML=`<div class="ed-box" style="max-width:430px"><div class="ed-head">${opts.dialogue?'💬 Insert NPC dialogue':'Insert '+type+' reference'}</div>
+    <div class="ed-body">
+      ${opts.dialogue?'<div class="ed-note" style="margin-bottom:8px">Pick who’s speaking — drops a linked line you can fill in.</div>':'<div class="rp-mode"><button id="rpEmbed" class="rp-tog on">Embed · full content</button><button id="rpLink" class="rp-tog">Link · chip</button></div>'}
+      <input id="rpSearch" placeholder="Search ${type}s…" autocomplete="off">
+      <div class="rp-list" id="rpList">${listHtml('')}</div>
+      <button id="rpNew" class="rp-new">＋ Create new ${type}…</button>
+    </div>
+    <div class="ed-foot"><span class="ed-note">Drops a token at your cursor${sceneEnt?` & links it to this ${sceneEnt.type}`:''}.</span><button id="rpCancel">Cancel</button></div></div>`;
+  $('editor').classList.add('show');
+  $('editor').onclick=ev=>{ if(ev.target===$('editor')) closeEditor(); };
+  $('rpCancel').onclick=closeEditor;
+  if($('rpEmbed')){ const setMode=mm=>{ mode=mm; $('rpEmbed').classList.toggle('on',mm==='embed'); $('rpLink').classList.toggle('on',mm==='link'); };
+    $('rpEmbed').onclick=()=>setMode('embed'); $('rpLink').onclick=()=>setMode('link'); }
+  const wireItems=()=>$('rpList').querySelectorAll('.rp-item').forEach(b=>b.onclick=()=>pick(b.dataset.id));
+  $('rpSearch').addEventListener('input', ()=>{ $('rpList').innerHTML=listHtml($('rpSearch').value); wireItems(); });
+  wireItems();
+  $('rpNew').onclick=async()=>{ const title=(await uiPrompt({title:'New '+type, label:'Title'})||'').trim(); if(!title) return;
+    const id=slug(title); const body=type==='creature'?'## Statblock\n*Custom monster — fill in AC, HP, abilities, actions.*\n':'';
+    const r=createEntity(VAULT, type, id, {title}, body); if(r.error){ uiAlert(r.error); return; } pick(id); };
+  $('rpSearch').focus();
+  function pick(id){
+    const v=ta.value;
+    if(opts.dialogue){   // box it like a read-aloud, with the speaker in bold + a clear placeholder line
+      const token='> **[['+id+']]:**\n> "Their line goes here — replace this."';
+      const before=v.slice(0,selA), after=v.slice(selB);
+      const lead=(before && !before.endsWith('\n'))?'\n':''; const trail=(after && !after.startsWith('\n'))?'\n':'';
+      ta.value=before+lead+token+trail+after;
+    } else {
+      const token=(mode==='embed'?'![[':'[[')+id+']]';
+      ta.value=v.slice(0,selA)+token+v.slice(selB);
+    }
+    const root=$('monitor').querySelector('.mon-edit');
+    if(sceneEnt && root){
+      pushHistory();
+      applyFormFields(sceneEnt, root);                       // capture the inserted token into the section text
+      const def=(typeof REL!=='undefined'?(REL[sceneEnt.type]||[]):[]).find(d=>d[1]===type);
+      if(def) addRelation(sceneEnt, def[0], def[2]===true, id);   // auto-register the formal relation
+      rebuildVault(); closeEditor(); commit(); $('saveNote').textContent='reference inserted ✓';
+    } else { closeEditor(); }
+  }
 }
 /* Entity card: a read-friendly view of ANY scene-referenced entity (NPC, location, item, trap,
    table, quest, creature…) for use at the table. Opened from clickable Monitor chips; relation
@@ -1387,35 +2048,32 @@ function openEditor(type,id){
   $('edRename').onclick=doRename; $('edDelete').onclick=doDelete;
   $('editor').onclick=ev=>{ if(ev.target===$('editor')) closeEditor(); };
   if($('edClone')) $('edClone').onclick=()=>{   // fill the Statblock textarea from SRD; no rebuild → no scroll jump
-    const sid=resolveSrd($('edSrdPick').value); if(!sid){ alert('Not in the SRD bestiary: '+$('edSrdPick').value); return; }
+    const sid=resolveSrd($('edSrdPick').value); if(!sid){ uiAlert('Not in the SRD bestiary: '+$('edSrdPick').value); return; }
     const ta=$('editor').querySelector('[data-sec="Statblock"]'); if(ta) ta.value=srdToMarkdown(SRD_BESTIARY[sid]);
     if(editEntity) delete editEntity.srd; $('saveNote').textContent='cloned — review & Save';
   };
   wireRels();
 }
 function applyEditor(){ const ent=editEntity; if(!ent){ closeEditor(); return; } pushHistory(); applyFormFields(ent); redriveFromVault(); commit(); closeEditor(); $('saveNote').textContent='edited ✓'; }
-function doRename(){
+async function doRename(){
   const ent=editEntity; if(!ent) return;
-  const ni=(prompt('Rename id (slug) — updates every reference:', ent.id)||'').trim();
+  const ni=(await uiPrompt({title:'Rename id', label:'New id (slug) — updates every reference', value:ent.id})||'').trim();
   if(!ni||ni===ent.id) return;
   applyFormFields(ent); pushHistory();
-  const r=renameEntity(VAULT, ent.type, ent.id, ni); if(r.error){ alert(r.error); return; }
+  const r=renameEntity(VAULT, ent.type, ent.id, ni); if(r.error){ uiAlert(r.error); return; }
   rebuildVault(); editEntity=VAULT.byId.get(ent.type+'::'+ni); commit();
   if(editEntity) openEditor(ent.type, ni); else closeEditor();
   $('saveNote').textContent='renamed ✓ ('+r.updated+' ref'+(r.updated===1?'':'s')+')';
 }
 function doDelete(){
   const ent=editEntity; if(!ent) return;
-  const info=referrersOf(VAULT, ent.type, ent.id);
-  if(!confirm(`Delete ${ent.type} "${ent.id}"?`+(info.refs.length?` Unlinks ${info.refs.length} referrer(s).`:'')+(info.clips?` Removes ${info.clips} timeline clip(s).`:''))) return;
-  pushHistory(); deleteEntity(VAULT, ent.type, ent.id); rebuildVault(); commit(); closeEditor();
-  $('saveNote').textContent='deleted ✓';
+  confirmDelete(ent.type, ent.id, ent.title);   // typed-DELETE modal (replaces editEntity content)
 }
-function cloneSrd(){
+async function cloneSrd(){
   const ent=editEntity; if(!ent||ent.type!=='creature') return;
-  const id=(prompt('Clone which SRD monster into an editable stat block? (slug)', ent.srd||'')||'').trim(); if(!id) return;
+  const id=(await uiPrompt({title:'Clone SRD monster', label:'Which SRD monster (slug)?', value:ent.srd||''})||'').trim(); if(!id) return;
   const m=(typeof SRD_BESTIARY!=='undefined') && SRD_BESTIARY[id];
-  if(!m){ alert('Not in the bundled SRD bestiary: '+id); return; }
+  if(!m){ uiAlert('Not in the bundled SRD bestiary: '+id); return; }
   applyFormFields(ent); pushHistory();
   setSection(ent, 'Statblock', srdToMarkdown(m)); delete ent.srd;
   rebuildVault(); editEntity=VAULT.byId.get('creature::'+ent.id); commit();
@@ -1423,7 +2081,7 @@ function cloneSrd(){
   $('saveNote').textContent='cloned SRD stats ✓';
 }
 function openCreate(){
-  if(!VAULT){ alert('Load a vault first — new entities are created into the loaded vault.'); return; }
+  if(!VAULT){ uiAlert('Load a vault first — new entities are created into the loaded vault.'); return; }
   const types=['scene','sequence','clock','npc','location','creature','item','trap','table','quest','handout'];
   $('editor').innerHTML=`<div class="ed-box"><div class="ed-head">＋ New entity</div>
     <div class="ed-body">${edSelect('Type','__ntype',types,'scene')}${edInput('Title','__ntitle','')}
@@ -1435,12 +2093,12 @@ function openCreate(){
   $('editor').onclick=ev=>{ if(ev.target===$('editor')) closeEditor(); };
   $('ncCreate').onclick=()=>{
     const E=$('editor'); const type=E.querySelector('[data-f="__ntype"]').value;
-    const title=(E.querySelector('[data-f="__ntitle"]').value||'').trim(); if(!title){ alert('Title required'); return; }
+    const title=(E.querySelector('[data-f="__ntitle"]').value||'').trim(); if(!title){ uiAlert('Title required'); return; }
     const id=slug(title); let body='';
     if(type==='creature'){ const raw=(E.querySelector('[data-f="__nsrd"]').value||'').trim();
-      if(raw){ const sid=resolveSrd(raw); if(!sid){ alert('Not in SRD bestiary: '+raw); return; } body='## Statblock\n'+srdToMarkdown(SRD_BESTIARY[sid]); }
+      if(raw){ const sid=resolveSrd(raw); if(!sid){ uiAlert('Not in SRD bestiary: '+raw); return; } body='## Statblock\n'+srdToMarkdown(SRD_BESTIARY[sid]); }
       else body='## Statblock\n*Custom monster — fill in AC, HP, abilities, actions.*\n'; }
-    pushHistory(); const r=createEntity(VAULT, type, id, {title}, body); if(r.error){ alert(r.error); return; }
+    pushHistory(); const r=createEntity(VAULT, type, id, {title}, body); if(r.error){ uiAlert(r.error); return; }
     rebuildVault(); commit(); openEditor(type, id); $('saveNote').textContent='created ✓';
   };
 }
@@ -1460,7 +2118,7 @@ async function recsFromFolder(fileList){
 }
 async function recsFromAugur(file){
   let entries; try{ entries=await unzip(await file.arrayBuffer()); }
-  catch(err){ alert('Could not read .augur: '+err.message); return null; }
+  catch(err){ uiAlert('Could not read .augur: '+err.message); return null; }
   const td=new TextDecoder();
   return entries.map(en=>{ const isText=/\.(md|json)$/i.test(en.name);
     return { path:en.name, name:en.name.split('/').pop(), text:isText?td.decode(en.bytes):'', bytes:isText?null:en.bytes, isText }; });
@@ -1481,6 +2139,8 @@ function runtimeSession(){
       if(c.overlay) o.isOverlay=true;
       if(c.collapsed===false) o.collapsed=false;
       if(c.filled!=null) o.filled=c.filled;
+      if(c.noteOutcome) o.outcome=c.noteOutcome;
+      if(c.noteGM) o.gmNotes=c.noteGM;
       return o;
     }),
     fires: fires.map(f=>{ const o={ id:f.id, clockClipId:f.clockClipId, clockId:f.clockId, at:f.at, flavor:f.flavor, atMinutes:f.atMin };
@@ -1509,7 +2169,7 @@ function downloadBlob(blob, name){
   setTimeout(()=>URL.revokeObjectURL(u),1500);
 }
 async function exportAugur(){
-  if(!VAULT){ alert('Load a vault first.'); return; }
+  if(!VAULT){ uiAlert('Load a vault first.'); return; }
   try{
     const files=buildExportFiles();
     const blob=await zip(files.map(f=>({ name:f.path, data:f.isText?f.text:f.bytes })));
@@ -1517,7 +2177,7 @@ async function exportAugur(){
     downloadBlob(blob, slug(title)+'.augur');
     redriveFromVault(); commit();      // synthesized entities + session are now part of the vault
     $('saveNote').textContent='exported ✓';
-  }catch(e){ alert('Export failed: '+e.message); }
+  }catch(e){ uiAlert('Export failed: '+e.message); }
 }
 async function writeFileToDir(root, path, data){
   const parts=path.split('/'); let dir=root;
@@ -1526,17 +2186,29 @@ async function writeFileToDir(root, path, data){
   const w=await fh.createWritable(); await w.write(data); await w.close();
 }
 async function saveToFolder(){
-  if(!VAULT){ alert('Load a vault first.'); return; }
-  if(!window.showDirectoryPicker){ alert('Saving in place needs a secure context (a packaged build or http://localhost). On file:// use “Save .augur” instead.'); return; }
+  if(!VAULT){ uiAlert('Load a vault first.'); return; }
+  if(!window.showDirectoryPicker){ uiAlert('Saving in place needs a secure context (a packaged build or http://localhost). On file:// use “Save .augur” instead.'); return; }
   try{
     if(!vaultDirHandle) vaultDirHandle=await window.showDirectoryPicker({ id:'augur-vault', mode:'readwrite' });
     const files=buildExportFiles();
     for(const f of files) await writeFileToDir(vaultDirHandle, f.path, f.isText?f.text:f.bytes);
     redriveFromVault(); commit();
     $('saveNote').textContent='saved to folder ✓';
-  }catch(e){ if(e && e.name==='AbortError') return; alert('Save to folder failed: '+e.message); }
+  }catch(e){ if(e && e.name==='AbortError') return; uiAlert('Save to folder failed: '+e.message); }
 }
 $('btnLoadVault').addEventListener('click', ()=>$('pickVault').click());
+$('btnNewVault').addEventListener('click', newVault);
+$('btnLoadSample').addEventListener('click', loadSampleAdventure);
+$('bag').addEventListener('contextmenu', e=>{
+  const item=e.target.closest('.bag-item');
+  if(item){ const id=item.dataset.asset, a=ASSETS[id];
+    if(a && VAULT && VAULT.byId && VAULT.byId.get(a.type+'::'+id)){ openBagItemMenu(e, a.type, id, a.title); }
+    else e.preventDefault();   // non-vault bag item (seed/group/stub): no menu
+    return;
+  }
+  openAddMenu(e);
+});
+$('lanes').addEventListener('contextmenu', e=>{ if(!isEmpty(e.target)) return; openAddMenu(e); });
 $('btnOpenAugur').addEventListener('click', ()=>$('pickVaultAugur').click());
 $('btnExport').addEventListener('click', exportAugur);
 $('btnSaveFolder').addEventListener('click', saveToFolder);
@@ -1544,17 +2216,24 @@ $('btnNew').addEventListener('click', openCreate);
 $('btnIssues').addEventListener('click', openIssues);
 $('btnLibrary').addEventListener('click', openLibrary);
 $('monitor').addEventListener('click', e=>{ const b=e.target.closest('.pill.ref'); if(b){ e.stopPropagation(); const [t,i]=b.dataset.card.split('::'); openCard(t,i); } });
+$('monitor').addEventListener('contextmenu', e=>{
+  if(!(VAULT && monEdit) || !e.target.closest('.mon-edit')) return;
+  if(e.target.closest('.me-title') || e.target.closest('.me-meta')) return;   // keep native menu (paste) on title/meta fields
+  const ta=e.target.closest('textarea.me-area');
+  const secEl=e.target.closest('.me-sec');
+  openInsertRefMenu(e, ta, secEl?secEl.getAttribute('data-secname'):null);
+});
 function fillSrdList(){ const dl=$('srdList'); if(dl && typeof SRD_BESTIARY!=='undefined') dl.innerHTML=Object.values(SRD_BESTIARY).map(m=>`<option value="${_esc(m.name)}"></option>`).join(''); }
-$('btnCloseVault').addEventListener('click', ()=>{ if(!vaultLoaded) return; if(confirm('Close the loaded vault and return to the built-in tutorial?')) loadSeed(); });
+$('btnCloseVault').addEventListener('click', async ()=>{ if(!vaultLoaded) return; if(await uiConfirm('Close Vault','Close the loaded vault and return to the built-in tutorial?','Close')) loadSeed(); });
 $('pickVault').addEventListener('change', async e=>{
   try{ const recs=await recsFromFolder(e.target.files); if(recs.length) loadVaultRecs(recs); }
-  catch(err){ alert('Vault load failed: '+err.message); }
+  catch(err){ uiAlert('Vault load failed: '+err.message); }
   finally{ e.target.value=''; }     // always reset so the same folder can be re-picked
 });
 $('pickVaultAugur').addEventListener('change', async e=>{
   const f=e.target.files[0];
   try{ if(f){ const recs=await recsFromAugur(f); if(recs) loadVaultRecs(recs); } }
-  catch(err){ alert('Vault load failed: '+err.message); }
+  catch(err){ uiAlert('Vault load failed: '+err.message); }
   finally{ e.target.value=''; }
 });
 
@@ -1570,7 +2249,9 @@ $('tlResizer').addEventListener('pointerdown', e=>{
 window.addEventListener('keydown', e=>{
   const mod=e.metaKey||e.ctrlKey;
   const editing = $('editor').classList.contains('show') || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
-  if(e.key==='Escape'){ if($('editor').classList.contains('show')){ closeEditor(); return; } closeCtx(); if(selected.size){ selected.clear(); commit(); } return; }
+  if(e.key==='Escape'){
+    if($('dialog').classList.contains('show')){ e.preventDefault(); if(_dlgEsc) _dlgEsc(); else _dlgClose(); return; }
+    if($('editor').classList.contains('show')){ closeEditor(); return; } closeCtx(); if(selected.size){ selected.clear(); commit(); } return; }
   if(editing) return;   // don't run timeline shortcuts while typing in the editor
   if(mod && (e.key==='z'||e.key==='Z')){ e.preventDefault(); if(e.shiftKey) redo(); else undo(); return; }
   if(mod && (e.key==='y'||e.key==='Y')){ e.preventDefault(); redo(); return; }
@@ -1590,12 +2271,67 @@ document.addEventListener('click', e=>{
   }
 }, true);
 
+/* ---------- custom desktop menu bar (File / Edit / View) ---------- */
+const MENUS = {
+  File: ()=>[
+    {label:'New Vault', act:()=>$('btnNewVault').click()},
+    {label:'Open Vault (folder)…', act:()=>$('btnLoadVault').click()},
+    {label:'Open .augur…', act:()=>$('btnOpenAugur').click()},
+    {label:'Load Sample Adventure', act:()=>$('btnLoadSample').click()},
+    {sep:true},
+    {label:'Save .augur…', act:()=>$('btnExport').click(), dis:!vaultLoaded},
+    {label:'Save to Folder…', act:()=>$('btnSaveFolder').click(), dis:!vaultLoaded},
+    {sep:true},
+    {label:'Close Vault', act:()=>$('btnCloseVault').click(), dis:!vaultLoaded},
+    {label:'Reset / Reload Tutorial', act:()=>$('btnReset').click()},
+  ],
+  Edit: ()=>[
+    {label:'Undo', sc:'Ctrl+Z', act:()=>$('btnUndo').click(), dis:undoStack.length===0},
+    {label:'Redo', sc:'Ctrl+Shift+Z', act:()=>$('btnRedo').click(), dis:redoStack.length===0},
+    {sep:true},
+    {label:'New Entity…', act:()=>$('btnNew').click(), dis:!vaultLoaded},
+  ],
+  View: ()=>[
+    {label:'Library', act:()=>$('btnLibrary').click(), dis:!vaultLoaded},
+    {label:'Vault Issues', act:()=>$('btnIssues').click(), dis:!(vaultLoaded&&VAULT&&VAULT.issues&&(VAULT.issues.errors.length+VAULT.issues.warnings.length))},
+    {sep:true},
+    {label:'Export Recap…', act:()=>$('btnRecap').click()},
+  ],
+  Help: ()=>[
+    {label:'What is Augur?', act:showIntro},
+    {label:'Return to guided tour', act:()=>$('btnCloseVault').click(), dis:!vaultLoaded},
+  ],
+};
+let openMenuName=null, menuPopEl=null;
+function closeMenu(){ if(menuPopEl){ menuPopEl.remove(); menuPopEl=null; } const t=document.querySelector('.menu-top.open'); if(t) t.classList.remove('open'); openMenuName=null; }
+function openTopMenu(name, topBtn){
+  closeMenu();
+  openMenuName=name; topBtn.classList.add('open');
+  const items=MENUS[name]();
+  const pop=document.createElement('div'); pop.className='menu-pop';
+  pop.innerHTML=items.map((it,i)=> it.sep?'<div class="menu-sep"></div>'
+    : `<button${it.dis?' disabled':''} data-i="${i}">${it.label}${it.sc?`<span class="sc">${it.sc}</span>`:''}</button>`).join('');
+  document.body.appendChild(pop);
+  const r=topBtn.getBoundingClientRect();
+  pop.style.left=Math.max(0, Math.min(r.left, window.innerWidth-pop.offsetWidth-6))+'px';
+  menuPopEl=pop;
+  pop.querySelectorAll('button[data-i]').forEach(b=>{ const it=items[+b.dataset.i]; b.onclick=()=>{ closeMenu(); if(it && !it.dis && it.act) it.act(); }; });
+  pop.addEventListener('pointerdown', e=>e.stopPropagation());
+}
+document.querySelectorAll('.menu-top').forEach(t=>{
+  t.addEventListener('click', e=>{ e.stopPropagation(); if(openMenuName===t.dataset.menu) closeMenu(); else openTopMenu(t.dataset.menu, t); });
+  t.addEventListener('pointerenter', ()=>{ if(openMenuName && openMenuName!==t.dataset.menu) openTopMenu(t.dataset.menu, t); });
+});
+window.addEventListener('pointerdown', e=>{ if(menuPopEl && !menuPopEl.contains(e.target) && !e.target.closest('.menu-top')) closeMenu(); });
+window.addEventListener('keydown', e=>{ if(e.key==='Escape' && openMenuName) closeMenu(); });
+
 /* ---------- boot ---------- */
 (function boot(){
   checkStorage();
   load();                 // restore saved layout if present
   fillSrdList();
   renderBag(); renderTimeline(); renderMonitor(); updateButtons();
+  try{ if(!localStorage.getItem('augur-intro-seen')) showIntro(); }catch(e){}   // first run only
 })();
 </script>
 </body>

@@ -37,6 +37,7 @@ function referrersOf(vault, type, id){
 
 function createEntity(vault, type, id, fields, body){
   fields=fields||{}; body=body||'';
+  if(type==='scene' && !fields.duration) fields={ ...fields, duration:{ min:30, max:45, confidence:'loose' } };  // sensible default so new scenes are draggable + valid
   if(!/^[a-z0-9][a-z0-9-]*$/.test(id)) return {error:'id must be a slug: lowercase letters, numbers, hyphens'};
   if(vault.all.some(e=>e.type===type && e.id===id)) return {error:`a ${type} with id "${id}" already exists`};
   const ent={ id, type, ...fields, sections:_sections(body), body:String(body), _path:(FOLDER[type]||'misc')+'/'+id+'.md', _resolved:{} };
